@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:weightSum="3">
+
+    <nl.sison.android.nodejs.repl.RobotoRegularTextView
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:id="@+id/textView"
+        android:layout_weight="2" />
+
+    <nl.sison.android.nodejs.repl.RobotoRegularEditText
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:hint="@string/app_name"
+        android:gravity="center_vertical"
+        android:id="@+id/editText"
+        android:layout_weight="1"/>
+
+</LinearLayout>
