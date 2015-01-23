@@ -6,7 +6,7 @@ android {
     buildToolsVersion "21.1.1"
 
     defaultConfig {
-        applicationId "nl.sison.android.nodjes.repl"
+        applicationId "nl.sison.android.nodejs.repl"
         minSdkVersion 15
         targetSdkVersion 21
         versionCode 1

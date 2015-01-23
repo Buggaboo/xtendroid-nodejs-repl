@@ -18,6 +18,8 @@ import org.xtendroid.annotations.BundleProperty
     String mOutfile
     String mInfile
 
+    ReplFragment fragment
+
    @OnCreate
    def init() {
        setupToolbar()
@@ -34,19 +36,23 @@ import org.xtendroid.annotations.BundleProperty
            filesDir.mkdir()
        }
 
-       mOutfile = filesDir + '/out' // + something random
+       mOutfile = filesDir + '/out' // TODO filename + something random
        mInfile  = filesDir + '/in'
 
-       new Thread ([ NodeJNI.initStdio(mOutfile, mInfile) ]).start()
+       new Thread
+       ([
+           NodeJNI.initStdio(mOutfile, mInfile)
+           NodeJNI.start(2, #["nodejs", "--help"])
+       ]).start()
    }
 
    def setupFragment()
    {
         // TODO inject text instead of whole fragment
         val tx = supportFragmentManager.beginTransaction
-        val frag = new ReplFragment()
-        //frag.putOutfile(mOutfile).putInfile(mInfile)
-        tx.replace(R.id.container, frag as Fragment).addToBackStack(null).commit();
+        fragment = new ReplFragment()
+        fragment.putOutFile(mOutfile).putInFile(mInfile)
+        tx.replace(R.id.container, fragment as Fragment).addToBackStack(null).commit();
    }
 
    MyActionBarDrawerToggle actionBarDrawerToggle
@@ -57,7 +63,7 @@ import org.xtendroid.annotations.BundleProperty
 
        val String[] arrayOfWords = #["Hello", "Xtend"]
        listView.adapter = new ArrayAdapter<String>(this, R.layout.drawer_list_item, arrayOfWords)
-//       listView.onItemClickListener = [parent, view, position, id|  ];
+//       listView.onItemClickListener = [parent, view, position, id|  ]; // TODO add injectable examples
 
        val drawer = drawerLayout
 
