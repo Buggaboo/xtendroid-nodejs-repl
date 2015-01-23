@@ -24,7 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-
+/*
 @AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
 {
     val mHandler = new Handler()
@@ -83,7 +83,7 @@ import java.io.OutputStreamWriter;
 
 
 }
-
+*/
 
 @AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity {
 

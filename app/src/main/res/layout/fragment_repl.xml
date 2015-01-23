@@ -4,19 +4,23 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:weightSum="3">
-<!--
-    <nl.sison.android.nodejs.repl.RobotoRegularTextView
+
+    <!-- FIXME Xtendroid's recursively view accessor active annotations: @AndroidFragment & @AndroidActivity,
+        break in Intellij for Custom Views,
+        currently there is no way to debug this... -->
+    <!--<nl.sison.android.nodejs.repl.RobotoRegularTextView-->
+    <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:id="@+id/textView"
         android:layout_weight="2" />
 
-    <nl.sison.android.nodejs.repl.RobotoRegularEditText
+    <!--<nl.sison.android.nodejs.repl.RobotoRegularEditText-->
+    <EditText
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:hint="@string/app_name"
         android:gravity="center_vertical"
         android:id="@+id/editText"
         android:layout_weight="1"/>
--->
-    <TextView android:id="@+id/text_view_dummy" android:layout_height="match_parent" android:layout_width="match_parent" />
+
 </LinearLayout>
