@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 
-@AndroidFragment(R.layout.fragment_repl) class FragmentRepl extends Fragment
+@AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
 {
     val mHandler = new Handler()
 
@@ -46,7 +46,7 @@ import java.io.OutputStreamWriter;
                 {
                     val str = in.readLine()
                     mHandler.post([
-                        textView.text = str
+                        //textView.text = str
                     ])
                 }
             }catch (FileNotFoundException e)
@@ -116,8 +116,8 @@ import java.io.OutputStreamWriter;
    {
         // TODO inject text instead of whole fragment
         val tx = supportFragmentManager.beginTransaction
-        val frag = new FragmentRepl()
-        frag.putOutfile(mOutfile).putInfile(mInfile)
+        val frag = new ReplFragment()
+        //frag.putOutfile(mOutfile).putInfile(mInfile)
         tx.replace(R.id.container, frag as Fragment).addToBackStack(null).commit();
    }
 
@@ -129,7 +129,7 @@ import java.io.OutputStreamWriter;
 
        val String[] arrayOfWords = #["Hello", "Xtend"]
        listView.adapter = new ArrayAdapter<String>(this, R.layout.drawer_list_item, arrayOfWords)
-       listView.onItemClickListener = [parent, view, position, id|  ];
+//       listView.onItemClickListener = [parent, view, position, id|  ];
 
        val drawer = drawerLayout
 

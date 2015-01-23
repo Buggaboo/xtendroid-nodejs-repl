@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:weightSum="3">
-
+<!--
     <nl.sison.android.nodejs.repl.RobotoRegularTextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -17,5 +17,6 @@
         android:gravity="center_vertical"
         android:id="@+id/editText"
         android:layout_weight="1"/>
-
+-->
+    <TextView android:id="@+id/text_view_dummy" android:layout_height="match_parent" android:layout_width="match_parent" />
 </LinearLayout>
