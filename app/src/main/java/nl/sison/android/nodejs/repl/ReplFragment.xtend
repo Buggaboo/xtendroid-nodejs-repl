@@ -2,7 +2,6 @@ package nl.sison.android.nodejs.repl
 
 import android.support.v4.app.Fragment
 import android.os.Handler
-import android.widget.TextView
 
 import org.xtendroid.annotations.AndroidFragment
 import org.xtendroid.app.OnCreate
@@ -14,7 +13,6 @@ import org.xtendroid.annotations.BundleProperty
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
