@@ -64,7 +64,7 @@ extern "C" {
 
 /* Shamelessly borrowed from [manishcm/Redirection-JNI](https://github.com/manishcm/Redirection-JNI) */
 jstring
-Java_nl_sison_android_nodejs_repl_NodeJNI_start_initStdio
+Java_nl_sison_android_nodejs_repl_NodeJNI_initStdio
     ( JNIEnv* env, jobject thiz, jstring jOutfile, jstring jInfile )
 {
 	const char* outfile = env->GetStringUTFChars(jOutfile, 0);
