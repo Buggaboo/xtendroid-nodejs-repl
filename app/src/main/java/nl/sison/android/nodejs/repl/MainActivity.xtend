@@ -4,6 +4,8 @@ import android.support.v7.app.ActionBarActivity
 import android.support.v4.app.Fragment
 import android.content.res.Configuration
 import android.widget.ArrayAdapter
+import android.view.Menu
+import android.view.MenuItem
 
 import java.io.File
 
@@ -15,6 +17,9 @@ import nl.sison.android.nodejs.repl.NodeJNI
 import static extension nl.sison.android.nodejs.repl.Settings.*
 import org.xtendroid.annotations.BundleProperty
 
+/**
+ * TODO add ip address on drawer
+ */
 @AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity {
 
     String mOutfile
@@ -57,7 +62,7 @@ import org.xtendroid.annotations.BundleProperty
        new Thread
        ([
            NodeJNI.initStdio(mOutfile, mInfile)
-           NodeJNI.start(2, #["nodejs", "--help"])
+           NodeJNI.start(1, #["-v"])
        ]).start()
    }
 
@@ -90,6 +95,13 @@ import org.xtendroid.annotations.BundleProperty
        drawer.drawerListener = actionBarDrawerToggle
    }
 
+   override boolean onCreateOptionsMenu(Menu menu)
+   {
+       val inflater = menuInflater
+       inflater.inflate(R.menu.main, menu)
+       return super.onCreateOptionsMenu(menu)
+   }
+
    def setupToolbar()
    {
         supportActionBar = toolbar
@@ -97,19 +109,19 @@ import org.xtendroid.annotations.BundleProperty
         actionBar.displayHomeAsUpEnabled = true
    }
 
-   /*
-   override setTitle(CharSequence title)
-   {
-       super.setTitle(title)
-       actionBar.title = title
-   }*/
-
    override onBackPressed() {
        val listView = drawerListView
        if (drawerLayout.isDrawerOpen(listView))
            drawerLayout.closeDrawer(listView)
        else
            super.onBackPressed()
+   }
+
+   override boolean onOptionsItemSelected(MenuItem item) {
+       // TODO add clear button
+       fragment.writeToStdin(fragment.editText.text.toString())
+
+       return super.onOptionsItemSelected(item)
    }
 
    /**

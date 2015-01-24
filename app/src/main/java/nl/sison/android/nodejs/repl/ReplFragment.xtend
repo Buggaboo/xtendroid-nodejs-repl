@@ -70,7 +70,7 @@ import java.io.OutputStreamWriter
     }
 
     // write from EditText
-    def writeToStdin(String content)
+    public def writeToStdin(String content)
     {
         new Thread([
             var BufferedWriter out = null
