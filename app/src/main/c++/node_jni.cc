@@ -62,10 +62,11 @@ using namespace node;
 extern "C" {
 #endif
 
+
 /* Shamelessly borrowed from [manishcm/Redirection-JNI](https://github.com/manishcm/Redirection-JNI) */
-jstring
+JNIEXPORT jstring JNICALL
 Java_nl_sison_android_nodejs_repl_NodeJNI_initStdio
-    ( JNIEnv* env, jobject thiz, jstring jOutfile, jstring jInfile )
+    ( JNIEnv* env, jclass thiz, jstring jOutfile, jstring jInfile )
 {
 	const char* outfile = env->GetStringUTFChars(jOutfile, 0);
 	const char* infile = env->GetStringUTFChars(jInfile, 0);
@@ -103,9 +104,9 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_initStdio
 	fscanf(stdin, "%*s %99[^\n]", buf); // Use this format to read white spaces.
 	close(fdi);
     
-#ifdef __DEBUG__    
-	__android_log_write(ANDROID_LOG_DEBUG, "Android NodeJS REPL", buf);
-#endif
+//#ifdef __DEBUG__    
+//	__android_log_write(ANDROID_LOG_DEBUG, "Android NodeJS REPL", buf);
+//#endif
 
 	env->ReleaseStringUTFChars(jOutfile, outfile);
 	env->ReleaseStringUTFChars(jInfile, infile);
@@ -113,9 +114,9 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_initStdio
     return env->NewStringUTF(buf);
 }
 
-jint
-JNICALL JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_start
-    (JNIEnv * env, jclass, jint java_argc, jobjectArray java_argv)
+JNIEXPORT jint JNICALL
+Java_nl_sison_android_nodejs_repl_NodeJNI_start
+    (JNIEnv* env, jclass thiz, jint java_argc, jobjectArray java_argv)
 {
     int len = env->GetArrayLength(java_argv); // should be equal to argc
 
@@ -151,6 +152,8 @@ JNICALL JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_start
     return returnValue;
 }
 
+
 #ifdef __cplusplus
 }
 #endif
+

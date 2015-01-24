@@ -9,7 +9,7 @@ public class NodeJNI {
         System.loadLibrary("node");
     }
 
-    public static native int initStdio(String inputFile, String outputFile);
+    public static native String initStdio(String inputFile, String outputFile);
 
     public static native int start(int argc, String[] argv);
 }
