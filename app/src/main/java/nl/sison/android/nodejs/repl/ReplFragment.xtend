@@ -46,7 +46,7 @@ import java.io.OutputStreamWriter
     }
 
     // read to TextView
-    def readStdout()
+    public def readStdout()
     {
         new Thread([
             var BufferedReader in = null
@@ -59,6 +59,7 @@ import java.io.OutputStreamWriter
                         textView.text = str
                     ])
                 }
+                in.close()
             }catch (FileNotFoundException e)
             {
                 e.printStackTrace()

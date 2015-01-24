@@ -13,7 +13,7 @@ import org.xtendroid.app.AndroidActivity
 import org.xtendroid.app.OnCreate
 import nl.sison.android.nodejs.repl.NodeJNI
 
-//import static extension org.xtendroid.utils.AlertUtils.*
+import static extension org.xtendroid.utils.AlertUtils.*
 import static extension nl.sison.android.nodejs.repl.Settings.*
 import org.xtendroid.annotations.BundleProperty
 
@@ -59,10 +59,11 @@ import org.xtendroid.annotations.BundleProperty
            outfile.createNewFile()
        }
 
+       val doesNothingWhatsoever = 0
        new Thread
        ([
            NodeJNI.initStdio(mOutfile, mInfile)
-           NodeJNI.start(1, #["-v"])
+           NodeJNI.start(doesNothingWhatsoever, #["will_this_be_ignored"])
        ]).start()
    }
 
@@ -120,6 +121,8 @@ import org.xtendroid.annotations.BundleProperty
    override boolean onOptionsItemSelected(MenuItem item) {
        // TODO add clear button
        fragment.writeToStdin(fragment.editText.text.toString())
+       fragment.readStdout()
+       toast(fragment.editText.text.toString())
 
        return super.onOptionsItemSelected(item)
    }
