@@ -2,6 +2,7 @@ package nl.sison.android.nodejs.repl
 
 import android.support.v4.app.Fragment
 import android.os.Handler
+import android.os.Bundle
 
 import org.xtendroid.annotations.AndroidFragment
 import org.xtendroid.app.OnCreate
@@ -11,18 +12,24 @@ import nl.sison.android.nodejs.repl.NodeJNI
 import static extension nl.sison.android.nodejs.repl.Settings.*
 import org.xtendroid.annotations.BundleProperty
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.FileReader
+import java.io.IOException
+import java.io.OutputStreamWriter
 
 
 @AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
 {
     val mHandler = new Handler()
+
+    public new ()
+    {
+        // TODO put this in the Xtendroid default ctor
+        arguments = new Bundle()
+    }
 
     @BundleProperty
     String outFile
