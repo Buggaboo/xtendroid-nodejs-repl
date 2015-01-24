@@ -5,6 +5,8 @@ import android.support.v4.app.Fragment
 import android.content.res.Configuration
 import android.widget.ArrayAdapter
 
+import java.io.File
+
 import org.xtendroid.app.AndroidActivity
 import org.xtendroid.app.OnCreate
 import nl.sison.android.nodejs.repl.NodeJNI
@@ -38,6 +40,19 @@ import org.xtendroid.annotations.BundleProperty
 
        mOutfile = filesDir + '/out' // TODO filename + something random
        mInfile  = filesDir + '/in'
+
+       val infile  = new File (mInfile)
+       val outfile = new File (mOutfile)
+
+       if (!infile.exists())
+       {
+           infile.createNewFile()
+       }
+
+       if (!outfile.exists())
+       {
+           outfile.createNewFile()
+       }
 
        new Thread
        ([
