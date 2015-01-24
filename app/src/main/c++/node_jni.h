@@ -12,7 +12,7 @@ extern "C" {
  * Method:    initStdio
  * Signature: (Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_initStdio
+JNIEXPORT jstring JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_initStdio
   (JNIEnv *, jclass, jstring, jstring);
 
 /*
