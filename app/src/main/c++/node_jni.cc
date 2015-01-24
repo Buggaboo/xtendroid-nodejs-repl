@@ -29,6 +29,24 @@
 
 using namespace node;
 
+#if defined(__arm__)
+  #if defined(__ARM_ARCH_7A__)
+    #if defined(__ARM_NEON__)
+      #define ABI "armeabi-v7a/NEON"
+    #else
+      #define ABI "armeabi-v7a"
+    #endif
+  #else
+   #define ABI "armeabi"
+  #endif
+#elif defined(__i386__)
+   #define ABI "x86"
+#elif defined(__mips__)
+   #define ABI "mips"
+#else
+   #define ABI "unknown"
+#endif
+
 /**
  * Ol' dirty trick to convert const char* to char*
  */
@@ -49,26 +67,9 @@ jstring
 Java_nl_sison_android_nodejs_repl_NodeJNI_start_initStdio
     ( JNIEnv* env, jobject thiz, jstring jOutfile, jstring jInfile )
 {
-#if defined(__arm__)
-  #if defined(__ARM_ARCH_7A__)
-    #if defined(__ARM_NEON__)
-      #define ABI "armeabi-v7a/NEON"
-    #else
-      #define ABI "armeabi-v7a"
-    #endif
-  #else
-   #define ABI "armeabi"
-  #endif
-#elif defined(__i386__)
-   #define ABI "x86"
-#elif defined(__mips__)
-   #define ABI "mips"
-#else
-   #define ABI "unknown"
-#endif
-
 	const char* outfile = env->GetStringUTFChars(jOutfile, 0);
 	const char* infile = env->GetStringUTFChars(jInfile, 0);
+    /* const char* errfile = ""; */
     /* TODO also create stderr */
 
 	/*
@@ -84,7 +85,7 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_start_initStdio
 
 	dup2(fdo, 1);
 	setbuf(stdout, NULL);
-	fprintf(stdout, "This string will be written to %s", outfile);
+	fprintf(stdout, "%s", outfile);
 	fprintf(stdout, "\n");
 	fflush(stdout);
 	close(fdo);
@@ -101,7 +102,10 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_start_initStdio
 	char buf[256] = "";
 	fscanf(stdin, "%*s %99[^\n]", buf); // Use this format to read white spaces.
 	close(fdi);
-	__android_log_write(ANDROID_LOG_ERROR, "Redirection1", buf);
+    
+#ifdef __DEBUG__    
+	__android_log_write(ANDROID_LOG_DEBUG, "Android NodeJS REPL", buf);
+#endif
 
 	env->ReleaseStringUTFChars(jOutfile, outfile);
 	env->ReleaseStringUTFChars(jInfile, infile);

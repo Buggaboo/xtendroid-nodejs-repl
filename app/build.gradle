@@ -8,7 +8,7 @@ android {
     // prevent ndk from building automagically
     android {
         sourceSets.main {
-            jniLibs.srcDir 'src/main/libs' // for shared objects
+//            jniLibs.srcDir 'src/main/libs' // for shared objects
             jni.srcDirs = [] //disable automatic ndk-build
         }
     }
