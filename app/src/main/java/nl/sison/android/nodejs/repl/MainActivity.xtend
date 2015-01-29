@@ -59,7 +59,8 @@ import org.xtendroid.annotations.BundleProperty
            outfile.createNewFile()
        }
 
-       new Thread ([ NodeJNI.start(mOutfile, mInfile, 2, #["iojs", "-i"]) ]).start()
+       // ideally, the communication flows via the stdio proxies
+       new Thread ([ NodeJNI.start(mOutfile, mInfile, 1, #["iojs"]) ]).start()
    }
 
    def setupFragment()
@@ -113,11 +114,10 @@ import org.xtendroid.annotations.BundleProperty
            super.onBackPressed()
    }
 
+   // TODO add clear button
    override boolean onOptionsItemSelected(MenuItem item) {
-       // TODO add clear button
+
        fragment.writeToStdin(fragment.editText.text.toString())
-       fragment.readStdout()
-       toast(fragment.editText.text.toString())
 
        return super.onOptionsItemSelected(item)
    }

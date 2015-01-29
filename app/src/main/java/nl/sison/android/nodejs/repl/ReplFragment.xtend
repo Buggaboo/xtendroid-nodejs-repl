@@ -56,7 +56,7 @@ import java.io.OutputStreamWriter
                 {
                     val str = in.readLine()
                     mHandler.post([
-                        textView.text = str
+                        textView.text += str + "\n"
                     ])
                 }
                 in.close()
