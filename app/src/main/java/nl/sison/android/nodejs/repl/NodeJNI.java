@@ -6,10 +6,8 @@ package nl.sison.android.nodejs.repl;
 public class NodeJNI {
 
     static {
-        System.loadLibrary("node");
+        System.loadLibrary("iojs");
     }
 
-    public static native String initStdio(String inputFile, String outputFile);
-
-    public static native int start(int argc, String[] argv);
+    public static native int start(String inputFile, String outputFile, int argc, String[] argv);
 }
