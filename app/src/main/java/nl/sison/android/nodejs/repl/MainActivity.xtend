@@ -59,12 +59,7 @@ import org.xtendroid.annotations.BundleProperty
            outfile.createNewFile()
        }
 
-       val doesNothingWhatsoever = 0
-       new Thread
-       ([
-           NodeJNI.initStdio(mOutfile, mInfile)
-           NodeJNI.start(doesNothingWhatsoever, #["will_this_be_ignored"])
-       ]).start()
+       new Thread ([ NodeJNI.start(mOutfile, mInfile, 2, #["iojs", "-i"]) ]).start()
    }
 
    def setupFragment()

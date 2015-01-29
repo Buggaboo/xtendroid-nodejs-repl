@@ -37,15 +37,15 @@ import java.io.OutputStreamWriter
     @BundleProperty
     String inFile
 
+    BufferedWriter out
+
     @OnCreate
     def init() {
-        textView.onFocusChangeListener = [v, hasFocus| readStdout() ]
-        textView.onClickListener = [v| readStdout() ]
-        editText.onFocusChangeListener = [v, hasFocus| readStdout() ]
-        editText.onClickListener = [v| readStdout() ]
+        readStdout()
+        out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inFile)))
     }
 
-    // read to TextView
+    // perpetually read from stdout to TextView, run once
     public def readStdout()
     {
         new Thread([
@@ -70,16 +70,12 @@ import java.io.OutputStreamWriter
         ]).start()
     }
 
-    // write from EditText
+    // write to stdin from EditText
     public def writeToStdin(String content)
     {
         new Thread([
-            var BufferedWriter out = null
             try {
-                out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inFile)))
                 out.write(content.toCharArray(), 0, content.toCharArray().length);
-                out.flush()
-                out.close()
             }catch (FileNotFoundException e)
             {
                 e.printStackTrace()
@@ -90,5 +86,11 @@ import java.io.OutputStreamWriter
         ]).start()
     }
 
+    // don't close and flush, until you're realy done
+    override onDestroy()
+    {
+        out.flush()
+        out.close()
+    }
 
 }
