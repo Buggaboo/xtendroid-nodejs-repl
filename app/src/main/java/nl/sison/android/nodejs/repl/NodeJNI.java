@@ -9,5 +9,29 @@ public class NodeJNI {
         System.loadLibrary("iojs");
     }
 
-    public static native int start(String inputFile, String outputFile, int argc, String[] argv);
+    /**
+     *
+     * Use this in the main process to redirect all stdio
+     *
+     * @param inputFile
+     * @param outputFile
+     * @return file handles
+     */
+    public static native int[] redirectStdio(String inputFile, String outputFile);
+
+    /**
+     *
+     * If we initialize and close in the same nodejs calling thread (e.g. open, do business, close)
+     * then it will prematurely flush and close the streams,
+     * Since we are running the libiojs from a spawned thread,
+     * then the nodejs context will spawn a new one,
+     * independent of the calling thread.
+     *
+     * @param inputHandle
+     * @param outputHandle
+     * @return
+     */
+    public static native int stopRedirect(int inputHandle, int outputHandle);
+
+    public static native int start(int argc, String[] argv);
 }

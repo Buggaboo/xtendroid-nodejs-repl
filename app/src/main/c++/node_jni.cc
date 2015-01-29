@@ -61,23 +61,14 @@ using namespace node;
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-/* Shamelessly borrowed from [manishcm/Redirection-JNI](https://github.com/manishcm/Redirection-JNI) */
-JNIEXPORT jint JNICALL
-Java_nl_sison_android_nodejs_repl_NodeJNI_start
-    (JNIEnv* env, jclass thiz, jstring jOutfile, jstring jInfile, jint jargc, jobjectArray jargv)
+    
+JNIEXPORT jintArray JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_redirectStdio
+  (JNIEnv* env, jclass thiz, jstring jOutfile, jstring jInfile)
 {
     const char* outfile = env->GetStringUTFChars(jOutfile, 0);
     const char* infile = env->GetStringUTFChars(jInfile, 0);
     
-    int len = env->GetArrayLength(jargv); // should be equal to argc
-
-    char** argv = new char*[len];
-    jstring* jstringArr = new jstring[len];
-    
-        /* const char* errfile = ""; */
-    /* TODO also create stderr */
+    /* TODO also create stderr? */
 
     /*
      * Step 1: Make a named pipe
@@ -91,8 +82,8 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_start
     int in = mkfifo(infile, 0664); // Make named input file here for synchronization
 
     dup2(fdo, 1);
-    setbuf(stdout, NULL); // setvbuf?
-//  fprintf(stdout, "%s", outfile);
+    setbuf(stdout, NULL); // TODO investigate setvbuf
+//  fprintf(stdout, "%s", outfile); // test code
 //  fprintf(stdout, "\n");
 
     /*
@@ -103,9 +94,56 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_start
      */
     int fdi = open(infile, O_RDONLY);
     dup2(fdi, 0);
+    
+    // send fdi and fdo (file handles, int type) back
+    jintArray result = env->NewIntArray(2);
+    if (result == NULL) {
+        return NULL; /* out of memory error thrown */
+    }
+    
+    // all of this to return a tuple...
+    jint fill[2];
+    fill[0] = fdo;
+    fill[1] = fdi;
+    
+    // move from the temp structure to the java structure
+    env->SetIntArrayRegion(result, 0, 2, fill);
+        
+    env->ReleaseStringUTFChars(jOutfile, outfile);
+    env->ReleaseStringUTFChars(jInfile, infile);
+    
+    return result; // return array
+}  
+
+
+JNIEXPORT jint JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_stopRedirect
+  (JNIEnv* env, jclass thiz, jint jfdi, jint jfdo)
+{
+    // close proxy in
+    int in_result = close((int) jfdi);
+    
+    // flush unconsumed bytes, close proxy out
+    fflush(stdout);
+    int out_result = close((int) jfdo);
+    
+    return in_result + out_result;
+}
+
+/*
+ * Shamelessly borrowed from [manishcm/Redirection-JNI](https://github.com/manishcm/Redirection-JNI)
+ */
+JNIEXPORT jint JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_start
+  (JNIEnv *env, jclass clazz, jint jargc, jobjectArray jargv)
+{
+    
+    int len = env->GetArrayLength(jargv); // should be equal to argc
+
+    char** argv = new char*[len];
+    jstring* jstringArr = new jstring[len];
+
 
     // type conversion, wow
-    fprintf(stdout, "argc:%i", (int) jargc);
+    fprintf(stdout, "argc:%i\n", (int) jargc);
     for (int i=0; i<len; i++) {
         jstringArr[i] = (jstring) env->GetObjectArrayElement(jargv, i);
         charunion char_union;
@@ -113,30 +151,18 @@ Java_nl_sison_android_nodejs_repl_NodeJNI_start
         argv[i] = char_union.chr;
 
         // debug
-        fprintf(stdout, "%s", argv[i]); // stdout is /dev/null on Android        
+        fprintf(stdout, "%s\n", argv[i]); // stdout is /dev/null on Android        
     }
 
     // capture exit result
     int returnValue = node::Start((int) jargc, argv);
-    // TODO jint is a typedef for long on an arm 64 and how about endianness? Phrack it. Just cast.
+    // TODO jint is a typedef for long on an arm64/amd64 and how about endianness? Phrack it. Just cast.
     // figure out with macros later
-
-    // close proxy in
-    close(fdi);
-    
-    // flush unconsumed bytes, close proxy out
-    fflush(stdout);
-    close(fdo);
-
 
     for (int i=0; i<len; i++) {
         // prevent memory leaks
         env->ReleaseStringUTFChars(jstringArr[i], argv[i]);
     }
-    
-    env->ReleaseStringUTFChars(jOutfile, outfile);
-    env->ReleaseStringUTFChars(jInfile, infile);
-
     
     // deallocate arrays
     delete argv;

@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Bundle
 
 import org.xtendroid.annotations.AndroidFragment
+import org.xtendroid.annotations.AddLogTag
 import org.xtendroid.app.OnCreate
 import nl.sison.android.nodejs.repl.NodeJNI
 
@@ -20,7 +21,9 @@ import java.io.FileReader
 import java.io.IOException
 import java.io.OutputStreamWriter
 
+import android.util.Log
 
+@AddLogTag
 @AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
 {
     val mHandler = new Handler()
@@ -56,10 +59,12 @@ import java.io.OutputStreamWriter
                 {
                     val str = in.readLine()
                     mHandler.post([
-                        textView.text += str + "\n"
+                        textView.text = str
                     ])
+                    Log.d(TAG, "Party!")
                 }
                 in.close()
+                Log.d(TAG, "the party's over")
             }catch (FileNotFoundException e)
             {
                 e.printStackTrace()

@@ -25,6 +25,12 @@ import org.xtendroid.annotations.BundleProperty
     String mOutfile
     String mInfile
 
+    File outfile
+    File infile
+
+    int inputHandle
+    int outputHandle
+
     ReplFragment fragment
 
    @OnCreate
@@ -46,8 +52,8 @@ import org.xtendroid.annotations.BundleProperty
        mOutfile = filesDir + '/out' // TODO filename + something random
        mInfile  = filesDir + '/in'
 
-       val infile  = new File (mInfile)
-       val outfile = new File (mOutfile)
+       infile  = new File (mInfile)
+       outfile = new File (mOutfile)
 
        if (!infile.exists())
        {
@@ -59,8 +65,35 @@ import org.xtendroid.annotations.BundleProperty
            outfile.createNewFile()
        }
 
+       // TODO finish own repl
+/*
+       var replScript = '''
+       var repl = require('repl');
+       repl.start({
+           input
+       });
+       '''
+*/
+
        // ideally, the communication flows via the stdio proxies
-       new Thread ([ NodeJNI.start(mOutfile, mInfile, 1, #["iojs"]) ]).start()
+       new Thread ([
+           var fileHandles = NodeJNI.redirectStdio(mOutfile, mInfile)
+           inputHandle = fileHandles.get(0)
+           outputHandle = fileHandles.get(1)
+           NodeJNI.start(1, #["iojs"]) // TODO pass own repl params
+       ]).start()
+   }
+
+   /**
+    * TODO instead of onDestroy, move this to onPause, onResume
+    */
+   override onDestroy()
+   {
+        new Thread ([
+            NodeJNI.stopRedirect(inputHandle, outputHandle)
+        ])
+
+        // TODO destroy files, security
    }
 
    def setupFragment()
