@@ -58,10 +58,10 @@ import android.util.Log
                 while (in.ready())
                 {
                     val str = in.readLine()
+                    Log.d(TAG, String.format("Party! %s", str))
                     mHandler.post([
                         textView.text = str
                     ])
-                    Log.d(TAG, "Party!")
                 }
                 in.close()
                 Log.d(TAG, "the party's over")
@@ -94,6 +94,7 @@ import android.util.Log
     // don't close and flush, until you're realy done
     override onDestroy()
     {
+        super.onDestroy()
         out.flush()
         out.close()
     }

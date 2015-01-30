@@ -17,9 +17,14 @@ import static extension org.xtendroid.utils.AlertUtils.*
 import static extension nl.sison.android.nodejs.repl.Settings.*
 import org.xtendroid.annotations.BundleProperty
 
+import org.xtendroid.annotations.AddLogTag
+import android.util.Log
+
+
 /**
  * TODO add ip address on drawer
  */
+@AddLogTag
 @AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity {
 
     String mOutfile
@@ -65,35 +70,32 @@ import org.xtendroid.annotations.BundleProperty
            outfile.createNewFile()
        }
 
-       // TODO finish own repl
-/*
+       // TODO finish own repl, write to disk, load via argv
        var replScript = '''
-       var repl = require('repl');
-       repl.start({
-           input
-       });
+           var repl = require('repl');
+           repl.start();
        '''
-*/
+
 
        // ideally, the communication flows via the stdio proxies
        new Thread ([
-           var fileHandles = NodeJNI.redirectStdio(mOutfile, mInfile)
-           inputHandle = fileHandles.get(0)
-           outputHandle = fileHandles.get(1)
-           NodeJNI.start(1, #["iojs"]) // TODO pass own repl params
+           NodeJNI.start(4, #["iojs", "--debug", "-e", "console.log('hello turd')"]) // TODO pass own repl params
        ]).start()
    }
 
-   /**
-    * TODO instead of onDestroy, move this to onPause, onResume
-    */
-   override onDestroy()
+   override onResume()
    {
-        new Thread ([
-            NodeJNI.stopRedirect(inputHandle, outputHandle)
-        ])
+        super.onResume()
+        var fileHandles = NodeJNI.redirectStdio(mOutfile, mInfile)
+        inputHandle = fileHandles.get(0)
+        outputHandle = fileHandles.get(1)
+        Log.d(TAG, String.format("handles(in:%d, out:%d)", inputHandle, outputHandle))
+   }
 
-        // TODO destroy files, security
+   override onPause()
+   {
+       super.onPause()
+       NodeJNI.stopRedirect(inputHandle, outputHandle)
    }
 
    def setupFragment()
