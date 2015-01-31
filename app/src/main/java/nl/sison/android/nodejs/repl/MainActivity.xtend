@@ -20,6 +20,14 @@ import org.xtendroid.annotations.BundleProperty
 import org.xtendroid.annotations.AddLogTag
 import android.util.Log
 
+import android.content.Context
+
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+
 
 /**
  * TODO add ip address on drawer
@@ -72,14 +80,15 @@ import android.util.Log
 
        // TODO finish own repl, write to disk, load via argv
        var replScript = '''
-           var repl = require('repl');
-           repl.start();
+           var repl = require('repl')
+           repl.start()
        '''
 
 
        // ideally, the communication flows via the stdio proxies
        new Thread ([
-           NodeJNI.start(4, #["iojs", "--debug", "-e", "console.log('hello turd')"]) // TODO pass own repl params
+           val replServer = createCacheFile("repl-server.js").absolutePath
+           NodeJNI.start(2, #["iojs", replServer]) // TODO pass own repl params
        ]).start()
    }
 
@@ -104,7 +113,7 @@ import android.util.Log
         val tx = supportFragmentManager.beginTransaction
         fragment = new ReplFragment()
         fragment.putOutFile(mOutfile).putInFile(mInfile)
-        tx.replace(R.id.container, fragment as Fragment).addToBackStack(null).commit();
+        tx.replace(R.id.container, fragment as Fragment).addToBackStack(null).commit()
    }
 
    MyActionBarDrawerToggle actionBarDrawerToggle
@@ -122,7 +131,7 @@ import android.util.Log
        actionBarDrawerToggle = new MyActionBarDrawerToggle(this, drawer, toolbar)
 
        // This following line actually reveals the hamburger
-       drawer.post([|actionBarDrawerToggle.syncState()]);
+       drawer.post([|actionBarDrawerToggle.syncState()])
 
        drawer.drawerListener = actionBarDrawerToggle
    }
@@ -152,7 +161,7 @@ import android.util.Log
    // TODO add clear button
    override boolean onOptionsItemSelected(MenuItem item) {
 
-       fragment.writeToStdin(fragment.editText.text.toString())
+       System.in.read(fragment.editText.text.toString().bytes)
 
        return super.onOptionsItemSelected(item)
    }
@@ -161,9 +170,56 @@ import android.util.Log
     * Invariant to changes in orientation
     */
    override onConfigurationChanged(Configuration newConfig) {
-       super.onConfigurationChanged(newConfig);
-       actionBarDrawerToggle.onConfigurationChanged(newConfig);
+       super.onConfigurationChanged(newConfig)
+       actionBarDrawerToggle.onConfigurationChanged(newConfig)
    }
+
+   /**
+    * The alternative way to enter code in nodejs/iojs
+    */
+   def File createCacheFile(String filename)
+   {
+        val cacheFile = new File(cacheDir, filename)
+
+        if (cacheFile.exists()) {
+            return cacheFile
+        }
+
+        var InputStream inputStream = null
+        var FileOutputStream fileOutputStream = null
+
+        try {
+
+            inputStream = assets.open("js/" + filename)
+            fileOutputStream = new FileOutputStream(cacheFile)
+
+            val bufferSize = 1024
+            var buffer = newByteArrayOfSize(bufferSize)
+            var length = -1
+
+            while ( (length = inputStream.read(buffer)) > 0) {
+                fileOutputStream.write(buffer,0,length)
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace()
+        } catch (IOException e) {
+            e.printStackTrace()
+        }finally {
+            try {
+                fileOutputStream.close()
+            } catch (IOException e) {
+                e.printStackTrace()
+            }
+            try {
+                inputStream.close()
+            } catch (IOException e) {
+                e.printStackTrace()
+            }
+        }
+
+        return cacheFile
+    }
 
 }
 
