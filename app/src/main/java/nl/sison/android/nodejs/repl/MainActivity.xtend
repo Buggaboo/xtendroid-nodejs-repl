@@ -28,6 +28,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 
+import static extension gr.uoa.di.android.helpers.Net.*
+
+
 
 /**
  * TODO add ip address on drawer
@@ -78,17 +81,13 @@ import java.io.InputStream
            outfile.createNewFile()
        }
 
-       // TODO finish own repl, write to disk, load via argv
-       var replScript = '''
-           var repl = require('repl')
-           repl.start()
-       '''
-
+       Log.d(TAG, String.format("ip addr: %s, %s", getIPAddress(false), getIPAddress(true)))
 
        // ideally, the communication flows via the stdio proxies
        new Thread ([
-           val replServer = createCacheFile("repl-server.js").absolutePath
-           NodeJNI.start(2, #["iojs", replServer]) // TODO pass own repl params
+           val script = createCacheFile("bbs.js").absolutePath
+           Log.d(TAG, script)
+           NodeJNI.start(2, #["nodejs", script]) // TODO pass own repl params
        ]).start()
    }
 

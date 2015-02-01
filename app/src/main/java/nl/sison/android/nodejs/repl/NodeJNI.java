@@ -1,13 +1,5 @@
 package nl.sison.android.nodejs.repl;
 
-import android.content.Context;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  * Created by jasm on 1/22/15.
  */
