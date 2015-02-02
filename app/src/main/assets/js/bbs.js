@@ -10,7 +10,7 @@ var http = require('http'),
     repl = require('repl'),
     buf0 = new Buffer([0])
 
-var server = http.createServer(function(req, res) {
+var httpReplServer = http.createServer(function(req, res) {
     res.setHeader('content-type', 'multipart/octet-stream')
 
     res.write('Xtendroid nodejs repl\r\n')

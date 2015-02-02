@@ -38,11 +38,15 @@ import android.widget.TextView
 import java.io.InputStream
 import java.io.OutputStream
 
+import android.os.Handler
+
 /**
  * TODO add ip address on drawer
  */
 @AddLogTag
 @AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity {
+
+    val mHandler = new Handler()
 
     String mOutfile
     String mInfile
@@ -88,16 +92,19 @@ import java.io.OutputStream
        }
 
        Log.d(TAG, String.format("ip addr: %s, %s", getIPAddress(false), getIPAddress(true)))
-/*
+
        // remote http REPL
+
        new Thread ([
            NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath])
        ]).start()
-*/
-       // local unix socket REPL
-       new Thread([
+/*
+       new Thread ([
+           // local unix socket REPL
+           new File(localSocket).delete()
            NodeJNI.start(2, #["nodejs", createCacheFile("repl_sock.js").absolutePath])
        ]).start()
+*/
    }
 
    override onResume()
@@ -140,7 +147,7 @@ import java.io.OutputStream
        actionBarDrawerToggle = new MyActionBarDrawerToggle(this, drawer, toolbar)
 
        // This following line actually reveals the hamburger
-       drawer.post([|actionBarDrawerToggle.syncState()])
+       drawer.post([ actionBarDrawerToggle.syncState() ])
 
        drawer.drawerListener = actionBarDrawerToggle
    }
@@ -170,14 +177,22 @@ import java.io.OutputStream
            super.onBackPressed()
    }
 
+    val localSocket = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl-sock"
+
+    override onDestroy()
+    {
+        super.onDestroy()
+        new File(localSocket).delete()
+    }
+
    // TODO add clear button
    override boolean onOptionsItemSelected(MenuItem item) {
 
        //System.in.read(fragment.editText.text.toString().bytes) // hopelessly broken
        val message = fragment.editText.text.toString()
-       new Thread([
-           startLocalClient("/data/data/nl.sison.android.nodejs.repl/cache/node-repl-sock", message, fragment.textView)
-       ]).start()
+//       new Thread([
+//           startLocalClient(localSocket, message, fragment.textView)
+//       ]).start()
 
        return super.onOptionsItemSelected(item)
    }
@@ -245,8 +260,8 @@ import java.io.OutputStream
      * @param editText
      * @param textView
      * @throws Exception
-     */
-    def startLocalClient(String socketName, String message, TextView textView) throws Exception {
+     *//*
+    def startLocalClient(String socketName, String message, TextView textView) {
         // Construct a local socket
         val clientSocket = new LocalSocket();
         try {
@@ -271,7 +286,7 @@ import java.io.OutputStream
             val readSize = inputStream.read(messageBytes);
 
             // TODO append text
-            runOnUiThread([ textView.setText(new String(messageBytes, 0, readSize)) ])
+            mHandler.post([ textView.setText(new String(messageBytes, 0, readSize)) ])
 
             // Close streams
             outputStream.close();
@@ -282,6 +297,6 @@ import java.io.OutputStream
             clientSocket.close();
         }
     }
-
+*/
 }
 

@@ -1,7 +1,6 @@
 package nl.sison.android.nodejs.repl
 
 import android.support.v4.app.Fragment
-import android.os.Handler
 import android.os.Bundle
 
 import org.xtendroid.annotations.AndroidFragment
@@ -31,8 +30,6 @@ import android.util.Log
 @AddLogTag
 @AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
 {
-    val mHandler = new Handler()
-
     public new ()
     {
         // TODO put this in the Xtendroid default ctor
@@ -49,8 +46,8 @@ import android.util.Log
 
     override onResume() {
         super.onResume()
-        readStdout()
-        out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inFile)))
+//        readStdout()
+//        out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inFile)))
     }
 
     // perpetually read from stdout to TextView, run once
@@ -100,8 +97,8 @@ import android.util.Log
     override onPause()
     {
         super.onPause()
-        out.flush()
-        out.close()
+//        out.flush()
+//        out.close()
     }
 
 }
