@@ -23,6 +23,11 @@ import java.io.OutputStreamWriter
 
 import android.util.Log
 
+/**
+ * TODO deprecate, then remove all stdio redirection code, in two commits
+ * TODO make unix local socket work first
+ */
+
 @AddLogTag
 @AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
 {
@@ -42,8 +47,8 @@ import android.util.Log
 
     BufferedWriter out
 
-    @OnCreate
-    def init() {
+    override onResume() {
+        super.onResume()
         readStdout()
         out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inFile)))
     }
@@ -58,13 +63,13 @@ import android.util.Log
                 while (in.ready())
                 {
                     val str = in.readLine()
-                    Log.d(TAG, String.format("Party! %s", str))
-                    mHandler.post([
-                        textView.text = str
-                    ])
+                    Log.d(TAG, String.format("Redirected Stdout: %s", str))
+//                    mHandler.post([
+//                        textView.text = str
+//                    ])
                 }
                 in.close()
-                Log.d(TAG, "the party's over")
+                Log.d(TAG, "Redirected Stdout closed")
             }catch (FileNotFoundException e)
             {
                 e.printStackTrace()
@@ -91,10 +96,10 @@ import android.util.Log
         ]).start()
     }
 
-    // don't close and flush, until you're realy done
-    override onDestroy()
+    // don't close and flush, until you're really done
+    override onPause()
     {
-        super.onDestroy()
+        super.onPause()
         out.flush()
         out.close()
     }

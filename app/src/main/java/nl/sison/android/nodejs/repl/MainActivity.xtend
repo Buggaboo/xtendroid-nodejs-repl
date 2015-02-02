@@ -30,7 +30,13 @@ import java.io.InputStream
 
 import static extension gr.uoa.di.android.helpers.Net.*
 
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
+import android.widget.EditText
+import android.widget.TextView
 
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * TODO add ip address on drawer
@@ -82,12 +88,15 @@ import static extension gr.uoa.di.android.helpers.Net.*
        }
 
        Log.d(TAG, String.format("ip addr: %s, %s", getIPAddress(false), getIPAddress(true)))
-
-       // ideally, the communication flows via the stdio proxies
+/*
+       // remote http REPL
        new Thread ([
-           val script = createCacheFile("bbs.js").absolutePath
-           Log.d(TAG, script)
-           NodeJNI.start(2, #["nodejs", script]) // TODO pass own repl params
+           NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath])
+       ]).start()
+*/
+       // local unix socket REPL
+       new Thread([
+           NodeJNI.start(2, #["nodejs", createCacheFile("repl_sock.js").absolutePath])
        ]).start()
    }
 
@@ -97,12 +106,13 @@ import static extension gr.uoa.di.android.helpers.Net.*
         var fileHandles = NodeJNI.redirectStdio(mOutfile, mInfile)
         inputHandle = fileHandles.get(0)
         outputHandle = fileHandles.get(1)
-        Log.d(TAG, String.format("handles(in:%d, out:%d)", inputHandle, outputHandle))
+        Log.d(TAG, String.format("onResume: handles(in:%d, out:%d)", inputHandle, outputHandle))
    }
 
    override onPause()
    {
        super.onPause()
+       Log.d(TAG, String.format("onPause: handles(in:%d, out:%d)", inputHandle, outputHandle))
        NodeJNI.stopRedirect(inputHandle, outputHandle)
    }
 
@@ -149,6 +159,9 @@ import static extension gr.uoa.di.android.helpers.Net.*
         actionBar.displayHomeAsUpEnabled = true
    }
 
+   /**
+    * TODO destroy Activity when no fragment is on the fragment stack
+    */
    override onBackPressed() {
        val listView = drawerListView
        if (drawerLayout.isDrawerOpen(listView))
@@ -160,7 +173,11 @@ import static extension gr.uoa.di.android.helpers.Net.*
    // TODO add clear button
    override boolean onOptionsItemSelected(MenuItem item) {
 
-       System.in.read(fragment.editText.text.toString().bytes)
+       //System.in.read(fragment.editText.text.toString().bytes) // hopelessly broken
+       val message = fragment.editText.text.toString()
+       new Thread([
+           startLocalClient("/data/data/nl.sison.android.nodejs.repl/cache/node-repl-sock", message, fragment.textView)
+       ]).start()
 
        return super.onOptionsItemSelected(item)
    }
@@ -218,6 +235,52 @@ import static extension gr.uoa.di.android.helpers.Net.*
         }
 
         return cacheFile
+    }
+
+    /**
+     *
+     * Write to and read from unix socket (local unix socket repl)
+     *
+     * @param socketName
+     * @param editText
+     * @param textView
+     * @throws Exception
+     */
+    def startLocalClient(String socketName, String message, TextView textView) throws Exception {
+        // Construct a local socket
+        val clientSocket = new LocalSocket();
+        try {
+            // Set the socket namespace
+            val namespace = LocalSocketAddress.Namespace.FILESYSTEM;
+
+            // Construct local socket address
+            val address = new LocalSocketAddress(socketName, namespace);
+
+            // Connect to local socket
+            clientSocket.connect(address);
+
+            // Get message as bytes
+            val messageBytes = message.getBytes();
+
+            // Send message bytes to the socket
+            val outputStream = clientSocket.getOutputStream();
+            outputStream.write(messageBytes);
+
+            // Receive the message back from the socket
+            val inputStream = clientSocket.getInputStream();
+            val readSize = inputStream.read(messageBytes);
+
+            // TODO append text
+            runOnUiThread([ textView.setText(new String(messageBytes, 0, readSize)) ])
+
+            // Close streams
+            outputStream.close();
+            inputStream.close();
+
+        } finally {
+            // Close the local socket
+            clientSocket.close();
+        }
     }
 
 }

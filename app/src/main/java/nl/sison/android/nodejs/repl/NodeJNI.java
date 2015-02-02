@@ -1,5 +1,13 @@
 package nl.sison.android.nodejs.repl;
 
+import android.net.LocalSocket;
+import android.net.LocalSocketAddress;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+
 /**
  * Created by jasm on 1/22/15.
  */
