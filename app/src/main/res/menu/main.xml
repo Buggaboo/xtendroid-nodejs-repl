@@ -1,10 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
-        android:id="@+id/execute"
+        android:id="@+id/npm"
         android:orderInCategory="1"
-        android:title="Run"
-        app:showAsAction="ifRoom"/>
+        android:title="@string/NPM"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/npm_ls"
+                android:orderInCategory="1"
+                android:title="@string/npm_ls"
+                app:showAsAction="ifRoom" />
+            <item
+                android:id="@+id/npm_install"
+                android:orderInCategory="1"
+                android:title="@string/npm_install"
+                app:showAsAction="ifRoom" />
+            <item
+                android:id="@+id/npm_update"
+                android:orderInCategory="1"
+                android:title="@string/npm_update"
+                app:showAsAction="ifRoom" />
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/clear"
+        android:orderInCategory="1"
+        android:title="@string/clear"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/share"
+        android:orderInCategory="1"
+        android:title="@string/share"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/save"
+        android:orderInCategory="1"
+        android:title="@string/save"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/run"
+        android:orderInCategory="1"
+        android:title="@string/run"
+        app:showAsAction="ifRoom" />
 </menu>
