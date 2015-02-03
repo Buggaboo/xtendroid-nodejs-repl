@@ -11,7 +11,9 @@ import java.io.File
 
 import org.xtendroid.app.AndroidActivity
 import org.xtendroid.app.OnCreate
-import nl.sison.android.nodejs.repl.NodeJNI
+
+import nl.sison.android.nodejs.repl.ReplService
+import nl.sison.android.nodejs.repl.ReplFragment
 
 import static extension org.xtendroid.utils.AlertUtils.*
 import static extension nl.sison.android.nodejs.repl.Settings.*
@@ -22,12 +24,6 @@ import android.util.Log
 
 import android.content.Context
 
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-
 import static extension gr.uoa.di.android.helpers.Net.*
 
 import android.net.LocalSocket
@@ -35,309 +31,133 @@ import android.net.LocalSocketAddress
 import android.widget.EditText
 import android.widget.TextView
 
-import java.io.InputStream
-import java.io.OutputStream
-
-import java.io.BufferedOutputStream
-import java.io.BufferedInputStream
-import java.net.HttpURLConnection
-import java.net.URL
-
 import android.os.Handler
+
+import android.content.ServiceConnection
+import android.content.ComponentName
+
+import android.os.IBinder
+import android.content.Intent
 
 /**
  * TODO add ip address on drawer
  */
 @AddLogTag
-@AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity {
-
-    val mHandler = new Handler()
-
-    String mOutfile
-    String mInfile
-
-    File outfile
-    File infile
-
-    int inputHandle
-    int outputHandle
+@AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity implements ServiceConnection {
 
     ReplFragment fragment
 
-   @OnCreate
-   def init() {
-       setupToolbar()
-       setupDrawerLayout()
-       setupJni()
-       setupFragment() // place a fragment already
-   }
+    @OnCreate
+    def init() {
+        setupToolbar()
+        setupDrawerLayout()
+        startService(new Intent(this, ReplService));
+        doBindService()
+        setupFragment() // place a fragment already
+    }
 
-    HttpURLConnection urlConn = null
 
-    OutputStream outputStream = null
-    InputStream  inputStream = null
+    ReplService mService
 
-   def setupJni()
-   {
-       // TODO randomize, against distributed attacks
-       if (!filesDir.exists())
-       {
-           filesDir.mkdir()
-       }
+    override onServiceConnected(ComponentName name, IBinder service)
+    {
+         mService = (service as ReplService.LocalBinder).getService();
+    }
+    
+    override onServiceDisconnected(ComponentName name)
+    {
+        mService = null
+    }
 
-       mOutfile = filesDir + '/out' // TODO filename + something random
-       mInfile  = filesDir + '/in'
+    var boolean mIsBound = false
 
-       infile  = new File (mInfile)
-       outfile = new File (mOutfile)
+    def doBindService() {
+        bindService(new Intent(MainActivity.this, ReplService), MainActivity.this, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+        if(mService != null) {
+            mService.IsBoundable();
+        }
+    }
 
-       if (!infile.exists())
-       {
-           infile.createNewFile()
-       }
+    // Detach our existing connection.
+    def doUnbindService() {
+        if (mIsBound) {
+            unbindService(this);
+            mIsBound = false;
+        }
+    }
 
-       if (!outfile.exists())
-       {
-           outfile.createNewFile()
-       }
-
-       Log.d(TAG, String.format("ip addr: %s, %s", getIPAddress(false), getIPAddress(true)))
-
-       // remote http REPL
-
-       new Thread ([
-           NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath])
-
-           val url = new URL("http://localhost:8000")
-
-           new Thread ([
-               urlConn = url.openConnection() as HttpURLConnection
-               urlConn.doOutput = true
-               urlConn.doInput = true
-               urlConn.chunkedStreamingMode = 0
-               urlConn.requestMethod = "PUT"
-               //urlConn.setRequestProperty("Content-Type", "multipart/octet-stream")
-               urlConn.setRequestProperty("Accept", "*/*")
-               urlConn.setRequestProperty("Expect", "100-continue")
-               urlConn.setRequestProperty("Transfer-Encoding", "chunked")
-               urlConn.connect()
-               outputStream = new BufferedOutputStream(urlConn.outputStream) // socket out (send)
-               inputStream = new BufferedInputStream(urlConn.inputStream) // socket in (receive)
-
-            val bufferSize = 1024
-            val buffer = newByteArrayOfSize(bufferSize)
-
-               val readSize = inputStream.read(buffer);
-mHandler.post([
-               Log.d(TAG, String.format("socket: %s", new String(buffer, 0, readSize)))
-               ])
-
-                    // TODO append text
-                    //mHandler.post([ textView.setText(new String(messageBytes, 0, readSize)) ])
-//               mHandler.post([
-//                   textView.text = outputStream.toString()
-//               ])
-           ]).start()
-       ]).start()
-/*
-       new Thread ([
-           // local unix socket REPL
-           new File(localSocket).delete()
-           NodeJNI.start(2, #["nodejs", createCacheFile("repl_sock.js").absolutePath])
-       ]).start()
-*/
-   }
-
-   override onResume()
-   {
-        super.onResume()
-        var fileHandles = NodeJNI.redirectStdio(mOutfile, mInfile)
-        inputHandle = fileHandles.get(0)
-        outputHandle = fileHandles.get(1)
-        Log.d(TAG, String.format("onResume: handles(in:%d, out:%d)", inputHandle, outputHandle))
-   }
-
-   override onPause()
-   {
-       super.onPause()
-       Log.d(TAG, String.format("onPause: handles(in:%d, out:%d)", inputHandle, outputHandle))
-       NodeJNI.stopRedirect(inputHandle, outputHandle)
-   }
-
-   def setupFragment()
-   {
-        // TODO inject text instead of whole fragment
-        val tx = supportFragmentManager.beginTransaction
-        fragment = new ReplFragment()
-        fragment.putOutFile(mOutfile).putInFile(mInfile)
-        tx.replace(R.id.container, fragment as Fragment).addToBackStack(null).commit()
-   }
-
-   MyActionBarDrawerToggle actionBarDrawerToggle
-
-   def setupDrawerLayout()
-   {
-       val listView = drawerListView
-
-       val String[] arrayOfWords = #["Hello", "Xtend"]
-       listView.adapter = new ArrayAdapter<String>(this, R.layout.drawer_list_item, arrayOfWords)
-//       listView.onItemClickListener = [parent, view, position, id|  ]; // TODO add injectable examples
-
-       val drawer = drawerLayout
-
-       actionBarDrawerToggle = new MyActionBarDrawerToggle(this, drawer, toolbar)
-
-       // This following line actually reveals the hamburger
-       drawer.post([ actionBarDrawerToggle.syncState() ])
-
-       drawer.drawerListener = actionBarDrawerToggle
-   }
-
-   override boolean onCreateOptionsMenu(Menu menu)
-   {
-       val inflater = menuInflater
-       inflater.inflate(R.menu.main, menu)
-       return super.onCreateOptionsMenu(menu)
-   }
-
-   def setupToolbar()
-   {
-        supportActionBar = toolbar
-        val actionBar = supportActionBar
-        actionBar.displayHomeAsUpEnabled = true
-   }
-
-   /**
-    * TODO destroy Activity when no fragment is on the fragment stack
-    */
-   override onBackPressed() {
-       val listView = drawerListView
-       if (drawerLayout.isDrawerOpen(listView))
-           drawerLayout.closeDrawer(listView)
-       else
-           super.onBackPressed()
-   }
-
-//    val localSocket = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl-sock"
-/*
     override onDestroy()
     {
         super.onDestroy()
-        new File(localSocket).delete()
-    }
-*/
-   // TODO add clear button
-   override boolean onOptionsItemSelected(MenuItem item) {
-
-       //System.in.read(fragment.editText.text.toString().bytes) // hopelessly broken
-       val message = fragment.editText.text.toString()
-//       new Thread([
-//           startLocalClient(localSocket, message, fragment.textView)
-//       ]).start()
-
-       return super.onOptionsItemSelected(item)
-   }
-
-   /**
-    * Invariant to changes in orientation
-    */
-   override onConfigurationChanged(Configuration newConfig) {
-       super.onConfigurationChanged(newConfig)
-       actionBarDrawerToggle.onConfigurationChanged(newConfig)
-   }
-
-   /**
-    * The alternative way to enter code in nodejs/iojs
-    */
-   def File createCacheFile(String filename)
-   {
-        val cacheFile = new File(cacheDir, filename)
-
-        if (cacheFile.exists()) {
-            return cacheFile
-        }
-
-        var InputStream inputStream = null
-        var FileOutputStream fileOutputStream = null
-
-        try {
-
-            inputStream = assets.open("js/" + filename)
-            fileOutputStream = new FileOutputStream(cacheFile)
-
-            val bufferSize = 1024
-            var buffer = newByteArrayOfSize(bufferSize)
-            var length = -1
-
-            while ( (length = inputStream.read(buffer)) > 0) {
-                fileOutputStream.write(buffer,0,length)
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace()
-        } catch (IOException e) {
-            e.printStackTrace()
-        }finally {
-            try {
-                fileOutputStream.close()
-            } catch (IOException e) {
-                e.printStackTrace()
-            }
-            try {
-                inputStream.close()
-            } catch (IOException e) {
-                e.printStackTrace()
-            }
-        }
-
-        return cacheFile
+        doUnbindService();
     }
 
+    def setupFragment()
+    {
+         // TODO inject text instead of whole fragment
+         val tx = supportFragmentManager.beginTransaction
+         fragment = new ReplFragment()
+         tx.replace(R.id.container, fragment as Fragment).addToBackStack(null).commit()
+    }
+    
+    MyActionBarDrawerToggle actionBarDrawerToggle
+    
+    def setupDrawerLayout()
+    {
+        val listView = drawerListView
+    
+        val String[] arrayOfWords = #["Hello", "Xtend"]
+        listView.adapter = new ArrayAdapter<String>(this, R.layout.drawer_list_item, arrayOfWords)
+    //    listView.onItemClickListener = [parent, view, position, id|  ]; // TODO add injectable examples
+    
+        val drawer = drawerLayout
+    
+        actionBarDrawerToggle = new MyActionBarDrawerToggle(this, drawer, toolbar)
+    
+        // This following line actually reveals the hamburger
+        drawer.post([ actionBarDrawerToggle.syncState() ])
+    
+        drawer.drawerListener = actionBarDrawerToggle
+    }
+    
+    override boolean onCreateOptionsMenu(Menu menu)
+    {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+    
+    def setupToolbar()
+    {
+         supportActionBar = toolbar
+         val actionBar = supportActionBar
+         actionBar.displayHomeAsUpEnabled = true
+    }
+    
     /**
-     *
-     * Write to and read from unix socket (local unix socket repl)
-     *
-     * @param socketName
-     * @param editText
-     * @param textView
-     * @throws Exception
-     *//*
-    def startLocalClient(String socketName, String message, TextView textView) {
-        // Construct a local socket
-        val clientSocket = new LocalSocket();
-        try {
-            // Set the socket namespace
-            val namespace = LocalSocketAddress.Namespace.FILESYSTEM;
-
-            // Construct local socket address
-            val address = new LocalSocketAddress(socketName, namespace);
-
-            // Connect to local socket
-            clientSocket.connect(address);
-
-            // Get message as bytes
-            val messageBytes = message.getBytes();
-
-            // Send message bytes to the socket
-            val outputStream = clientSocket.getOutputStream();
-            outputStream.write(messageBytes);
-
-            // Receive the message back from the socket
-            val inputStream = clientSocket.getInputStream();
-            val readSize = inputStream.read(messageBytes);
-
-            // TODO append text
-            mHandler.post([ textView.setText(new String(messageBytes, 0, readSize)) ])
-
-            // Close streams
-            outputStream.close();
-            inputStream.close();
-
-        } finally {
-            // Close the local socket
-            clientSocket.close();
-        }
+     * TODO destroy Activity when no fragment is on the fragment stack
+     */
+    override onBackPressed() {
+        val listView = drawerListView
+        if (drawerLayout.isDrawerOpen(listView))
+         drawerLayout.closeDrawer(listView)
+        else
+         super.onBackPressed()
     }
-*/
+    
+    override boolean onOptionsItemSelected(MenuItem item) {
+        // TODO flesh out
+        return super.onOptionsItemSelected(item)
+    }
+    
+    /**
+     * Invariant to changes in orientation
+     */
+    override onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig)
+        actionBarDrawerToggle.onConfigurationChanged(newConfig)
+    }
+    
 }
 
