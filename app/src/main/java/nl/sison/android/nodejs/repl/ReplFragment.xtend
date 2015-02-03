@@ -48,8 +48,19 @@ import android.util.Log
         super.onResume()
 //        readStdout()
 //        out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inFile)))
+
     }
 
+    // don't close and flush, until you're really done
+    override onPause()
+    {
+        super.onPause()
+
+//        out.flush()
+//        out.close()
+    }
+
+/*
     // perpetually read from stdout to TextView, run once
     public def readStdout()
     {
@@ -92,13 +103,5 @@ import android.util.Log
             }
         ]).start()
     }
-
-    // don't close and flush, until you're really done
-    override onPause()
-    {
-        super.onPause()
-//        out.flush()
-//        out.close()
-    }
-
+*/
 }

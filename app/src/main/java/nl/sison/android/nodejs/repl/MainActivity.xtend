@@ -38,6 +38,11 @@ import android.widget.TextView
 import java.io.InputStream
 import java.io.OutputStream
 
+import java.io.BufferedOutputStream
+import java.io.BufferedInputStream
+import java.net.HttpURLConnection
+import java.net.URL
+
 import android.os.Handler
 
 /**
@@ -66,6 +71,11 @@ import android.os.Handler
        setupJni()
        setupFragment() // place a fragment already
    }
+
+    HttpURLConnection urlConn = null
+
+    OutputStream outputStream = null
+    InputStream  inputStream = null
 
    def setupJni()
    {
@@ -97,6 +107,37 @@ import android.os.Handler
 
        new Thread ([
            NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath])
+
+           val url = new URL("http://localhost:8000")
+
+           new Thread ([
+               urlConn = url.openConnection() as HttpURLConnection
+               urlConn.doOutput = true
+               urlConn.doInput = true
+               urlConn.chunkedStreamingMode = 0
+               urlConn.requestMethod = "PUT"
+               //urlConn.setRequestProperty("Content-Type", "multipart/octet-stream")
+               urlConn.setRequestProperty("Accept", "*/*")
+               urlConn.setRequestProperty("Expect", "100-continue")
+               urlConn.setRequestProperty("Transfer-Encoding", "chunked")
+               urlConn.connect()
+               outputStream = new BufferedOutputStream(urlConn.outputStream) // socket out (send)
+               inputStream = new BufferedInputStream(urlConn.inputStream) // socket in (receive)
+
+            val bufferSize = 1024
+            val buffer = newByteArrayOfSize(bufferSize)
+
+               val readSize = inputStream.read(buffer);
+mHandler.post([
+               Log.d(TAG, String.format("socket: %s", new String(buffer, 0, readSize)))
+               ])
+
+                    // TODO append text
+                    //mHandler.post([ textView.setText(new String(messageBytes, 0, readSize)) ])
+//               mHandler.post([
+//                   textView.text = outputStream.toString()
+//               ])
+           ]).start()
        ]).start()
 /*
        new Thread ([
@@ -177,14 +218,14 @@ import android.os.Handler
            super.onBackPressed()
    }
 
-    val localSocket = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl-sock"
-
+//    val localSocket = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl-sock"
+/*
     override onDestroy()
     {
         super.onDestroy()
         new File(localSocket).delete()
     }
-
+*/
    // TODO add clear button
    override boolean onOptionsItemSelected(MenuItem item) {
 
