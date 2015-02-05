@@ -12,7 +12,6 @@ import java.io.File
 import org.xtendroid.app.AndroidActivity
 import org.xtendroid.app.OnCreate
 
-import nl.sison.android.nodejs.repl.ReplService
 import nl.sison.android.nodejs.repl.ReplFragment
 
 import static extension org.xtendroid.utils.AlertUtils.*
@@ -26,24 +25,13 @@ import android.content.Context
 
 import static extension gr.uoa.di.android.helpers.Net.*
 
-import android.net.LocalSocket
-import android.net.LocalSocketAddress
-import android.widget.EditText
-import android.widget.TextView
 
-import android.os.Handler
-
-import android.content.ServiceConnection
-import android.content.ComponentName
-
-import android.os.IBinder
-import android.content.Intent
 
 /**
  * TODO add ip address on drawer
  */
 @AddLogTag
-@AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity implements ServiceConnection {
+@AndroidActivity(R.layout.activity_main_blacktoolbar) class MainActivity extends ActionBarActivity {
 
     ReplFragment fragment
 
@@ -51,46 +39,7 @@ import android.content.Intent
     def init() {
         setupToolbar()
         setupDrawerLayout()
-        startService(new Intent(this, ReplService));
-        doBindService()
         setupFragment() // place a fragment already
-    }
-
-
-    ReplService mService
-
-    override onServiceConnected(ComponentName name, IBinder service)
-    {
-         mService = (service as ReplService.LocalBinder).getService();
-    }
-    
-    override onServiceDisconnected(ComponentName name)
-    {
-        mService = null
-    }
-
-    var boolean mIsBound = false
-
-    def doBindService() {
-        bindService(new Intent(MainActivity.this, ReplService), MainActivity.this, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-        if(mService != null) {
-            mService.IsBoundable();
-        }
-    }
-
-    // Detach our existing connection.
-    def doUnbindService() {
-        if (mIsBound) {
-            unbindService(this);
-            mIsBound = false;
-        }
-    }
-
-    override onDestroy()
-    {
-        super.onDestroy()
-        doUnbindService();
     }
 
     def setupFragment()
@@ -98,7 +47,7 @@ import android.content.Intent
          // TODO inject text instead of whole fragment
          val tx = supportFragmentManager.beginTransaction
          fragment = new ReplFragment()
-         tx.replace(R.id.container, fragment as Fragment).addToBackStack(null).commit()
+         tx.add(R.id.container, fragment as Fragment).commit()
     }
     
     MyActionBarDrawerToggle actionBarDrawerToggle
@@ -147,6 +96,15 @@ import android.content.Intent
     }
     
     override boolean onOptionsItemSelected(MenuItem item) {
+
+        if (#[R.id.run, R.id.save, R.id.share, R.id.clear].contains(item.itemId))
+        {
+            if (fragment != null)
+            {
+                return fragment.onOptionsItemSelected(item)
+            }
+        }
+
         // TODO flesh out
         return super.onOptionsItemSelected(item)
     }
