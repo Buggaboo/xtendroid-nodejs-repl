@@ -28,21 +28,26 @@ import nl.sison.android.nodejs.repl.ReplService
 import android.content.ServiceConnection
 import android.content.ComponentName
 
-import android.os.IBinder
 import android.content.Intent
 
 import android.content.Context
+
+import android.os.IBinder
 
 import android.view.Menu
 import android.view.MenuItem
 
 import java.io.InputStream
-import java.io.OutputStream
 
+import java.io.OutputStream
 import java.io.BufferedOutputStream
 import java.io.BufferedInputStream
 import java.net.HttpURLConnection
 import java.net.URL
+
+import java.net.ConnectException
+
+import org.apache.http.util.ByteArrayBuffer
 
 @Accessors
 @AndroidParcelable
@@ -51,7 +56,7 @@ class StringParcel
     String output
 }
 
-
+@AddLogTag
 class HttpClientLoader extends BgSupportLoader<StringParcel>
 {
     @Accessors
@@ -59,13 +64,17 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 
     HttpURLConnection urlConn
     OutputStream outputStream
-    InputStream  inputStream
+
     URL url
 
-    val bufferSize = 8192
+    val bufferSize = 512
     val buffer = newByteArrayOfSize(bufferSize)
 
     val parcel = new StringParcel()
+
+    val baf = new ByteArrayBuffer(50);
+
+    BufferedInputStream bis
 
     new(Context context) {
         super(context)
@@ -77,36 +86,61 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
         // TODO implement retry and timeout
         if (url == null)
         {
-            url = new URL("http://localhost:8000")
+            var retry = true
+            while (retry)
+            {
+                try {
+                    url = new URL("http://localhost:8000")
 
-            urlConn = url.openConnection() as HttpURLConnection
-            urlConn.doOutput = true
-            urlConn.doInput = true
-            urlConn.chunkedStreamingMode = 0
-            urlConn.requestMethod = "PUT"
-            urlConn.setRequestProperty("Content-Type", "multipart/octet-stream")
-            urlConn.setRequestProperty("Accept", "*/*")
-            urlConn.setRequestProperty("Expect", "100-continue")
-            urlConn.setRequestProperty("Transfer-Encoding", "chunked")
-            urlConn.connect()
+                    urlConn = url.openConnection() as HttpURLConnection
+                    urlConn.doOutput = true
+                    urlConn.doInput = true
+                    urlConn.chunkedStreamingMode = 0
+                    urlConn.requestMethod = "PUT"
+                    urlConn.setRequestProperty("Content-Type", "multipart/octet-stream")
+                    urlConn.setRequestProperty("Accept", "*/*")
+                    urlConn.setRequestProperty("Expect", "100-continue")
+                    urlConn.setRequestProperty("Transfer-Encoding", "chunked")
+                    urlConn.allowUserInteraction = false
+                    urlConn.connect()
 
-            outputStream = new BufferedOutputStream(urlConn.outputStream) // socket out (send)
-            inputStream = new BufferedInputStream(urlConn.inputStream) // socket in (receive)
+                    outputStream = new BufferedOutputStream(urlConn.outputStream) // socket out (send)
+                    bis = new BufferedInputStream(urlConn.inputStream) // socket in (receive)
+
+                    retry = false
+
+                }catch(ConnectException ce) {
+                    Log.d(TAG, "retry connection")
+                    Thread.sleep(2000)
+                }
+            }
         }
 
-        parcel.output = sendMessage(input)
+        parcel.output = new String(sendMessage(input), "UTF-8")
 
         return parcel
     }
 
 
     def sendMessage(String message) {
-        if (TextUtils.isEmpty(message))
+        if (!TextUtils.isEmpty(message))
         {
             outputStream.write(message.bytes)
+            outputStream.flush
         }
-        inputStream.read(buffer, 0, 8192)
-        return new String(buffer, "UTF-8")
+        var read = -1
+        var flag = true
+        while(flag)
+        {
+            read = bis.read(buffer)
+            if (read == -1) {
+                flag = false // superhack since we don't have break/continue
+            }else
+            {
+                baf.append(buffer, 0, read)
+            }
+        }
+        return baf.toByteArray
     }
 
 }
