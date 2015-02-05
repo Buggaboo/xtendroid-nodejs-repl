@@ -116,7 +116,11 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
             }
         }
 
-        parcel.output = new String(sendMessage(input), "UTF-8")
+        val output = new String(sendMessage(input), "UTF-8")
+
+        Log.d(TAG, String.format("output: %s, input: %s", output, input))
+
+        parcel.output = output
 
         return parcel
     }
@@ -153,7 +157,7 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 	HttpClientLoader loader = new HttpClientLoader(activity)
 
 	override onLoadFinished(Loader loader, StringParcel parcel) {
-	    Log.d(TAG, parcel.output)
+	    Log.d(TAG, "onLoadFinished: " + parcel.output)
         textView.text = parcel.output
 	}
 
@@ -176,7 +180,11 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 //        if (#[R.id.run, R.id.save, R.id.share, R.id.clear].contains(item.itemId))
         if (R.id.run == item.itemId)
         {
-
+            val lm = getActivity().getSupportLoaderManager();
+            val input = editText.text.toString
+            loaderLoader.input = input
+        	lm.restartLoader(LOADER_LOADER_ID, null, this);
+        	Log.d(TAG, String.format("run: %s", input))
         }
         return super.onOptionsItemSelected(item)
     }
