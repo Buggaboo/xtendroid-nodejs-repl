@@ -1,22 +1,12 @@
 package nl.sison.android.nodejs.repl
 
-import java.io.BufferedWriter
-import java.io.OutputStreamWriter
-import java.io.PrintWriter
-
 import java.io.InputStream
 import java.io.OutputStream
-
-import java.io.BufferedOutputStream
-import java.io.BufferedInputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStream
 
 import android.app.Service
 import android.content.Intent
@@ -33,20 +23,13 @@ import org.xtendroid.annotations.AddLogTag
 @AddLogTag
 class ReplService extends Service {
 
-    HttpURLConnection urlConn
-
-    OutputStream outputStream
-    InputStream  inputStream
-
-	PrintWriter out
-
 	override onBind(Intent intent) {
 		return myBinder
 	}
 
-	val private IBinder myBinder = new LocalBinder(this)
+	val private IBinder myBinder = new ReplBinder(this)
 
-	static class LocalBinder extends Binder {
+	static class ReplBinder extends Binder {
 
 	    ReplService service
 
@@ -62,58 +45,31 @@ class ReplService extends Service {
 
 	override onCreate() {
 		super.onCreate()
-	}
 
-	def IsBoundable() {
+        Log.d(TAG, "onCreate")
 
-	}
+        val filePath = createCacheFile("bbs.js").absolutePath
+        Log.d(TAG, String.format("%s", filePath))
 
-	public def sendMessage(String message) {
-	   // TODO do something with printwriter...
+        new Thread ([
+            NodeJNI.start(2, #["nodejs", filePath])
+        ]).start()
 	}
 
 	override int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId)
-
-        // remote http REPL
-        NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath])
-
 		return START_STICKY
 	}
 
-	override onDestroy() {
-		super.onDestroy()
-
+	public def IsBoundable()
+	{
+	    return true // wtf is this supposed to do?
 	}
 
-    def startLocalClient()
-    {
-        val url = new URL("http://localhost:8000")
-
-        urlConn = url.openConnection() as HttpURLConnection
-        urlConn.doOutput = true
-        urlConn.doInput = true
-        urlConn.chunkedStreamingMode = 0
-        urlConn.requestMethod = "PUT"
-        //urlConn.setRequestProperty("Content-Type", "multipart/octet-stream")
-        urlConn.setRequestProperty("Accept", "*/*")
-        urlConn.setRequestProperty("Expect", "100-continue")
-        urlConn.setRequestProperty("Transfer-Encoding", "chunked")
-        urlConn.connect()
-        outputStream = new BufferedOutputStream(urlConn.outputStream) // socket out (send)
-        inputStream = new BufferedInputStream(urlConn.inputStream) // socket in (receive)
-
-        val bufferSize = 1024
-        val buffer = newByteArrayOfSize(bufferSize)
-
-        val readSize = inputStream.read(buffer);
-/*
-    mHandler.post([
-             Log.d(TAG, String.format("socket: %s", new String(buffer, 0, readSize)))
-             ])
-*/
-
-    }
+	override onDestroy() {
+	    Log.d(TAG, "onDestroy")
+		super.onDestroy()
+	}
 
     /**
      * The alternative way to enter code in nodejs/iojs
