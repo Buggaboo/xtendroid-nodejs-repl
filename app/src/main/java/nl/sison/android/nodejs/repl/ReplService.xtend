@@ -8,13 +8,20 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 
+import java.io.BufferedInputStream
+
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
-import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import android.os.IBinder
+
+import android.net.LocalSocket
+import android.net.LocalSocketAddress
+import android.text.TextUtils
+
+import org.apache.http.util.ByteArrayBuffer
 
 import nl.sison.android.nodejs.repl.NodeJNI
 
@@ -48,12 +55,17 @@ class ReplService extends Service {
 
         Log.d(TAG, "onCreate")
 
-        val filePath = createCacheFile("bbs.js").absolutePath
+        val filePath = createCacheFile("repl_sock.js").absolutePath
+        
         Log.d(TAG, String.format("%s", filePath))
 
         new Thread ([
             NodeJNI.start(2, #["nodejs", filePath])
         ]).start()
+
+        Thread.sleep(1000)
+
+        startLocalSocket(cacheDir + '/node-repl-sock')
 	}
 
 	override int onStartCommand(Intent intent, int flags, int startId) {
@@ -68,6 +80,7 @@ class ReplService extends Service {
 
 	override onDestroy() {
 	    Log.d(TAG, "onDestroy")
+	    closeSocket()
 		super.onDestroy()
 	}
 
@@ -116,6 +129,62 @@ class ReplService extends Service {
          }
 
          return cacheFile
+    }
+
+    LocalSocket clientSocket
+    OutputStream outputStream
+    InputStream  inputStream
+
+    val bufferSize = 512
+    val buffer = newByteArrayOfSize(bufferSize)
+
+
+    val baf = new ByteArrayBuffer(50);
+
+    BufferedInputStream bis
+
+    def startLocalSocket(String name)
+    {
+        clientSocket = new LocalSocket()
+        var namespace = LocalSocketAddress.Namespace.FILESYSTEM
+        var address = new LocalSocketAddress(name, namespace)
+
+        clientSocket.connect(address)
+
+        outputStream = clientSocket.outputStream
+        inputStream  = clientSocket.inputStream
+    }
+
+    def closeSocket()
+    {
+        outputStream.close()
+        inputStream.close()
+        clientSocket.close()
+    }
+
+    public def sendMessage(String message) {
+        if (!TextUtils.isEmpty(message))
+        {
+            outputStream.write(message.bytes)
+            outputStream.flush
+        }
+
+        var read = -1
+        var flag = true
+
+        // urlConn.inputStream signals the outputStream is ready to be sent
+        bis = new BufferedInputStream(inputStream) // socket in (receive)
+        while(flag)
+        {
+            read = bis.read(buffer)
+            if (read == -1) {
+                flag = false // superhack since we don't have break/continue
+            }else
+            {
+                baf.append(buffer, 0, read)
+            }
+        }
+        return baf.toByteArray
     }
 
 }
