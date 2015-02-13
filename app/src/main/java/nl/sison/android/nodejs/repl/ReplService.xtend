@@ -50,22 +50,26 @@ class ReplService extends Service {
 		}
 	}
 
+    var int[] handles
 	override onCreate() {
 		super.onCreate()
 
-        Log.d(TAG, "onCreate")
-
-        val filePath = createCacheFile("repl_sock.js").absolutePath
-        
-        Log.d(TAG, String.format("%s", filePath))
-
+        // this redirect stuff blocks, and must be run on a different process altogether
+        // I suspect that reloading the lib in the following thread destroys
+        // this invocation's resulting state (i.e. stdio redirection)
         new Thread ([
-            NodeJNI.start(2, #["nodejs", filePath])
+            handles = NodeJNI.redirectStdio(cacheDir + '/io-in', cacheDir + '/io-out')
         ]).start()
 
-        Thread.sleep(1000)
+        // The lib is reloaded once, both scripts succesfully run
+        new Thread ([
+            NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath ]) // runs succesfully
+            NodeJNI.start(2, #["nodejs", createCacheFile("repl_sock.js").absolutePath])
+        ]).start()
 
-        startLocalSocket(cacheDir + '/node-repl-sock')
+//        Thread.sleep(5000) // no it is not a synchronization problem
+
+//        startLocalSocket(cacheDir + '/node-repl-sock')
 	}
 
 	override int onStartCommand(Intent intent, int flags, int startId) {
@@ -80,6 +84,7 @@ class ReplService extends Service {
 
 	override onDestroy() {
 	    Log.d(TAG, "onDestroy")
+	    NodeJNI.stopRedirect(handles.get(0), handles.get(1))
 	    closeSocket()
 		super.onDestroy()
 	}
@@ -143,8 +148,12 @@ class ReplService extends Service {
 
     BufferedInputStream bis
 
+    /**
+     * TODO determine how to connect from the client
+     */
     def startLocalSocket(String name)
     {
+        Log.d(TAG, String.format("Attempting to connect with %s (unix local socket, ipc)", name))
         clientSocket = new LocalSocket()
         var namespace = LocalSocketAddress.Namespace.FILESYSTEM
         var address = new LocalSocketAddress(name, namespace)
@@ -165,6 +174,7 @@ class ReplService extends Service {
     public def sendMessage(String message) {
         if (!TextUtils.isEmpty(message))
         {
+            Log.d(TAG, "sending: " + message)
             outputStream.write(message.bytes)
             outputStream.flush
         }
@@ -184,6 +194,9 @@ class ReplService extends Service {
                 baf.append(buffer, 0, read)
             }
         }
+
+        Log.d(TAG, "receiving: " + new String(baf.toByteArray, 'UTF-8'))
+
         return baf.toByteArray
     }
 

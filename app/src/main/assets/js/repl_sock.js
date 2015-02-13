@@ -46,8 +46,9 @@ server.on('error', function (e) {
                 });
             }
         });
-        clientSocket.connect({path: socketPath}, function() { 
+        clientSocket.connect({path: socketPath}, function() {
             console.log('Server running, giving up...');
+            fs.unlinkSync(socketPath);
             process.exit();
         });
     }
