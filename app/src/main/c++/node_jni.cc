@@ -61,77 +61,7 @@ using namespace node;
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
-JNIEXPORT jintArray JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_redirectStdio
-  (JNIEnv* env, jclass thiz, jstring jOutfile, jstring jInfile)
-{
-    const char* outfile = env->GetStringUTFChars(jOutfile, 0);
-    const char* infile = env->GetStringUTFChars(jInfile, 0);
-    
-    /* TODO also create stderr? */
 
-    /*
-     * Step 1: Make a named pipe
-     * Step 2: Open the pipe in Write only mode. Java code will open it in Read only mode.
-     * Step 3: Make STDOUT i.e. 1, a duplicate of opened pipe file descriptor.
-     * Step 4: Any writes from now on to STDOUT will be redirected to the the pipe and can be read by Java code.
-     */
-    int out = mkfifo(outfile, 0664);
-    int fdo = open(outfile, O_WRONLY);
-
-    int in = mkfifo(infile, 0664); // Make named input file here for synchronization
-
-    dup2(fdo, 1);
-    setbuf(stdout, NULL); // TODO investigate setvbuf
-//  fprintf(stdout, "%s", outfile); // test code
-//  fprintf(stdout, "\n");
-
-    /*
-     * Step 1: Make a named pipe
-     * Step 2: Open the pipe in Read only mode. Java code will open it in Write only mode.
-     * Step 3: Make STDIN i.e. 0, a duplicate of opened pipe file descriptor.
-     * Step 4: Any reads from STDIN, will be actually read from the pipe and JAVA code will perform write operations.
-     */
-    int fdi = open(infile, O_RDONLY);
-    dup2(fdi, 0);
-    
-    // send fdi and fdo (file handles, int type) back
-    jintArray result = env->NewIntArray(2);
-    if (result == NULL) {
-        return NULL; /* out of memory error thrown */
-    }
-    
-    // all of this to return a tuple...
-    jint fill[2];
-    fill[0] = fdo;
-    fill[1] = fdi;
-    
-    // move from the temp structure to the java structure
-    env->SetIntArrayRegion(result, 0, 2, fill);
-        
-    env->ReleaseStringUTFChars(jOutfile, outfile);
-    env->ReleaseStringUTFChars(jInfile, infile);
-    
-    return result; // return array
-}  
-
-
-JNIEXPORT jint JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_stopRedirect
-  (JNIEnv* env, jclass thiz, jint jfdi, jint jfdo)
-{
-    // close proxy in
-    int in_result = close((int) jfdi);
-    
-    // flush unconsumed bytes, close proxy out
-    fflush(stdout);
-    int out_result = close((int) jfdo);
-    
-    return in_result + out_result;
-}
-
-/*
- * Shamelessly borrowed from [manishcm/Redirection-JNI](https://github.com/manishcm/Redirection-JNI)
- */
 JNIEXPORT jint JNICALL Java_nl_sison_android_nodejs_repl_NodeJNI_start
   (JNIEnv *env, jclass clazz, jint jargc, jobjectArray jargv)
 {
