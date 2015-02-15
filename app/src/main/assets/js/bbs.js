@@ -10,7 +10,7 @@ var http = require('http'),
     repl = require('repl'),
     buf0 = new Buffer([0])
 
-var httpReplServer = http.createServer(function(req, res) {
+var httpserver = http.createServer(function(req, res) {
     res.setHeader('content-type', 'multipart/octet-stream')
 
     res.write('Xtendroid nodejs repl\r\n')
@@ -36,4 +36,4 @@ var httpReplServer = http.createServer(function(req, res) {
         clearInterval(iv)
     })
 })
-server.listen(8000)
+httpserver.listen(8000)
