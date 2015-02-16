@@ -7,6 +7,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.FileDescriptor
 
 import java.io.BufferedInputStream
 
@@ -18,8 +19,10 @@ import android.widget.Toast
 import android.os.IBinder
 
 import android.net.LocalSocket
+import android.net.LocalServerSocket
 import android.net.LocalSocketAddress
 import android.text.TextUtils
+import android.os.ParcelFileDescriptor
 
 import org.apache.http.util.ByteArrayBuffer
 
@@ -50,26 +53,57 @@ class ReplService extends Service {
 		}
 	}
 
-    var int[] handles
+    LocalServerSocket serverSocket
+    LocalSocket socket
+/*
+ * Before:
+ * 02-16 05:23:56.235  16058-16084/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_bind::fd:78, pipe_fname:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:110
+ * 02-16 05:23:56.265  16058-16084/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_connect::fd:78, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:110
+ * 02-16 05:23:56.285  16058-16084/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_bind::fd:78, pipe_fname:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:110
+ * 02-16 05:25:15.425  16058-16084/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_connect::fd:80, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:110
+ *
+ * After:
+ * 02-16 06:35:07.465  28188-28203/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_bind::fd:78, pipe_fname:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:63
+ * 02-16 06:35:07.505  28188-28203/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_connect::fd:78, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:63
+ * 02-16 06:35:07.525  28188-28203/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_bind::fd:78, pipe_fname:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:63
+ * 02-16 06:37:01.145  28188-28203/nl.sison.android.nodejs.repl D/iojs/android﹕ uv_pipe_connect::fd:80, saddr.sun_path:/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock, sizeof saddr:63
+ */
 	override onCreate() {
 		super.onCreate()
+/*
+        var file = new File(cacheDir + '/node-repl.sock')
+        file.createNewFile
+        var fo = new FileOutputStream(file);
+        fo.write(0);
+        fo.close();
+        val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.READ_AND_WRITE );
+		serverSocket = new LocalServerSocket(pfd.fileDescriptor)
 
-        // this redirect stuff blocks, and must be run on a different process altogether
-        // I suspect that reloading the lib in the following thread destroys
-        // this invocation's resulting state (i.e. stdio redirection)
-        new Thread ([
-            handles = NodeJNI.redirectStdio(cacheDir + '/io-in', cacheDir + '/io-out')
-        ]).start()
+		Log.d(TAG, String.format("real file descriptor int: %d", pfd.fd))
+*/
 
         // The lib is reloaded once, both scripts succesfully run
         new Thread ([
-            NodeJNI.start(2, #["nodejs", createCacheFile("bbs.js").absolutePath ]) // runs succesfully
-            NodeJNI.start(2, #["nodejs", createCacheFile("repl_sock.js").absolutePath])
+            NodeJNI.start(2, #["nodejs", createCacheFile("http_and_sock_repl.js").absolutePath ]) // runs succesfully
         ]).start()
 
-//        Thread.sleep(5000) // no it is not a synchronization problem
+        //serverSocket = new LocalServerSocket(createFileDescriptor(66))
 
-//        startLocalSocket(cacheDir + '/node-repl-sock')
+	}
+
+	/**
+	 * Leverage reflection to call ZygoteInit#createFileDescriptor
+	 */
+	def createFileDescriptor(int fdi)
+	{
+        var cls = Class.forName('com.android.internal.os.ZygoteInit')
+        for (m : cls.declaredMethods)
+        {
+            Log.d(TAG, m.toString)
+        }
+        var method = cls.getDeclaredMethod('createFileDescriptor', Integer.TYPE)
+        method.accessible = true
+        return method.invoke(null, #[ fdi ]) as FileDescriptor
 	}
 
 	override int onStartCommand(Intent intent, int flags, int startId) {
@@ -84,7 +118,6 @@ class ReplService extends Service {
 
 	override onDestroy() {
 	    Log.d(TAG, "onDestroy")
-	    NodeJNI.stopRedirect(handles.get(0), handles.get(1))
 	    closeSocket()
 		super.onDestroy()
 	}
@@ -95,11 +128,12 @@ class ReplService extends Service {
     def File createCacheFile(String filename)
     {
          val cacheFile = new File(cacheDir, filename)
-
+/*
+         // always load fresh files
          if (cacheFile.exists()) {
           return cacheFile
          }
-
+*/
          var InputStream inputStream = null
          var FileOutputStream fileOutputStream = null
 
@@ -136,7 +170,6 @@ class ReplService extends Service {
          return cacheFile
     }
 
-    LocalSocket clientSocket
     OutputStream outputStream
     InputStream  inputStream
 
@@ -148,27 +181,27 @@ class ReplService extends Service {
 
     BufferedInputStream bis
 
-    /**
-     * TODO determine how to connect from the client
-     */
-    def startLocalSocket(String name)
+    def setupLocalSocketStreams()
     {
-        Log.d(TAG, String.format("Attempting to connect with %s (unix local socket, ipc)", name))
-        clientSocket = new LocalSocket()
-        var namespace = LocalSocketAddress.Namespace.FILESYSTEM
-        var address = new LocalSocketAddress(name, namespace)
+        socket = serverSocket.accept() // blocks until connect
 
-        clientSocket.connect(address)
+        Log.d(TAG, String.format("Attempting to connect with %s (unix local socket, ipc)", socket.localSocketAddress.name))
+        Log.d(TAG, String.format("bound:%b\tconnected:%b", socket.bound, socket.connected))
+        System.out.println('test' + socket.bound + socket.connected)
 
-        outputStream = clientSocket.outputStream
-        inputStream  = clientSocket.inputStream
+        outputStream = socket.outputStream
+        inputStream  = socket.inputStream
+
+        // test
+        sendMessage('1 + 1')
     }
 
     def closeSocket()
     {
+        socket.close()
         outputStream.close()
         inputStream.close()
-        clientSocket.close()
+        bis.close()
     }
 
     public def sendMessage(String message) {

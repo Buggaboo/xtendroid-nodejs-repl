@@ -104,6 +104,7 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
         	lm.restartLoader(LOADER_HTTP_REPL_CLIENT_ID, null, this);
         	Log.d(TAG, String.format("run: %s", input))
 */
+            textView.text = new String(mService.sendMessage("1 + 1;"), 'UTF-8')
         }
         return super.onOptionsItemSelected(item)
     }
