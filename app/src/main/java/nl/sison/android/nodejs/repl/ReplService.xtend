@@ -53,7 +53,6 @@ class ReplService extends Service {
 		}
 	}
 
-    LocalServerSocket serverSocket
     LocalSocket socket
 /*
  * Before:
@@ -70,25 +69,15 @@ class ReplService extends Service {
  */
 	override onCreate() {
 		super.onCreate()
-/*
-        var file = new File(cacheDir + '/node-repl.sock')
-        file.createNewFile
-        var fo = new FileOutputStream(file);
-        fo.write(0);
-        fo.close();
-        val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.READ_AND_WRITE );
-		serverSocket = new LocalServerSocket(pfd.fileDescriptor)
-
-		Log.d(TAG, String.format("real file descriptor int: %d", pfd.fd))
-*/
 
         // The lib is reloaded once, both scripts succesfully run
         new Thread ([
             NodeJNI.start(2, #["nodejs", createCacheFile("http_and_sock_repl.js").absolutePath ]) // runs succesfully
         ]).start()
 
-        //serverSocket = new LocalServerSocket(createFileDescriptor(66))
-
+        Thread.sleep(5000)
+        socket = new LocalSocket
+        connectLocalSocket(cacheDir + '/node-repl.sock')
 	}
 
 	/**
@@ -97,10 +86,12 @@ class ReplService extends Service {
 	def createFileDescriptor(int fdi)
 	{
         var cls = Class.forName('com.android.internal.os.ZygoteInit')
+        /*
         for (m : cls.declaredMethods)
         {
             Log.d(TAG, m.toString)
         }
+        */
         var method = cls.getDeclaredMethod('createFileDescriptor', Integer.TYPE)
         method.accessible = true
         return method.invoke(null, #[ fdi ]) as FileDescriptor
@@ -181,13 +172,21 @@ class ReplService extends Service {
 
     BufferedInputStream bis
 
+    def connectLocalSocket(String name)
+    {
+        var namespace = LocalSocketAddress.Namespace.FILESYSTEM
+        var address = new LocalSocketAddress(name, namespace)
+        //socket.bind(address)
+        socket.connect(address)
+        setupLocalSocketStreams
+    }
+
     def setupLocalSocketStreams()
     {
-        socket = serverSocket.accept() // blocks until connect
-
-        Log.d(TAG, String.format("Attempting to connect with %s (unix local socket, ipc)", socket.localSocketAddress.name))
+//        Log.d(TAG, String.format("Attempting to connect with %s (unix local socket, ipc)", socket.localSocketAddress.name))
         Log.d(TAG, String.format("bound:%b\tconnected:%b", socket.bound, socket.connected))
-        System.out.println('test' + socket.bound + socket.connected)
+        System.out.println('test' + socket.bound + socket.connected) // TODO remove
+
 
         outputStream = socket.outputStream
         inputStream  = socket.inputStream
