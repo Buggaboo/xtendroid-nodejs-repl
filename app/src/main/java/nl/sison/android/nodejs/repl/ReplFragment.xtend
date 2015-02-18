@@ -43,6 +43,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.IOException
 
+import android.widget.EditText
+import android.widget.TextView
+
 @AndroidParcelable
 class StringParcel
 {
@@ -72,7 +75,7 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 
 	override onLoadFinished(Loader loader, StringParcel parcel) {
 	    Log.d(TAG, "onLoadFinished: " + parcel.output)
-        textView.text = parcel.output
+        //textView.text = parcel.output
 	}
 
 	override onLoaderReset(Loader<StringParcel> loader) {
@@ -98,13 +101,16 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
         if (R.id.run == item.itemId)
         {
 /*
+            // TODO remove
             val lm = activity.supportLoaderManager
             val input = editText.text.toString
             httpReplClientLoader.input = input
         	lm.restartLoader(LOADER_HTTP_REPL_CLIENT_ID, null, this);
         	Log.d(TAG, String.format("run: %s", input))
 */
-            textView.text = new String(mService.sendMessage("1 + 1;"), 'UTF-8')
+            // @+id/meh magic breaks down for custom views
+            val editText = findViewById(R.id.editText) as EditText
+            ReplWorker.instance.write(editText.text.toString)
         }
         return super.onOptionsItemSelected(item)
     }
