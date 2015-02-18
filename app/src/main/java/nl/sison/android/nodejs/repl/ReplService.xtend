@@ -61,15 +61,6 @@ class ReplTextView extends RobotoRegularTextView implements Handler$Callback
 {
     public static String KEY_RESULT = 'result'
 
-    /**
-     * First in the sequence of lifecycle onEvents
-     */
-    override onAttachedToWindow()
-    {
-        super.onAttachedToWindow
-
-    }
-
     override onDetachedFromWindow()
     {
         super.onDetachedFromWindow
@@ -86,7 +77,7 @@ class ReplTextView extends RobotoRegularTextView implements Handler$Callback
      */
     override boolean handleMessage(Message msg)
     {
-        this.post[ ReplTextView.this.text = TextUtils.concat(ReplTextView.this.text, msg.data.getString(KEY_RESULT)) ]
+        this.post[ ReplTextView.this.text = TextUtils.concat(ReplTextView.this.text, '\n', msg.data.getString(KEY_RESULT)) ]
         return true
     }
 }
@@ -120,6 +111,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
 
     // TODO add special xml attrib for setting the socketName
     // new NodeReplWorker(cacheDir + '/node-repl.sock, textView)
+    // TODO determine Xtend bug: no private ctors allowed, but I want a -ing Singleton.
     new(String socketName, Handler$Callback textView)
     {
         super("NodeReplWorker::" + socketName, android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY)
@@ -242,7 +234,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     def processStatement(String statement) {
         if (!TextUtils.isEmpty(statement))
         {
-            mOutputStream.write(statement.bytes)
+            mOutputStream.write(TextUtils.concat(statement, '\n').toString.bytes)
             mOutputStream.flush
         }
 
@@ -305,6 +297,10 @@ class ReplService extends Service {
 
 	val private IBinder myBinder = new ReplBinder(this)
 
+    /**
+     * It's not actually necessary to bind with the service
+     * just in case...
+     */
 	static class ReplBinder extends Binder {
 
 	    ReplService service
@@ -361,7 +357,7 @@ class ReplService extends Service {
 	}
 
     /**
-     * The alternative way to enter code in nodejs/iojs
+     * Read from the assets and write to the cache
      */
     def File createCacheFile(String filename)
     {
@@ -403,6 +399,31 @@ class ReplService extends Service {
           } catch (IOException e) {
               e.printStackTrace()
           }
+         }
+
+         return cacheFile
+    }
+
+    /**
+     * Write string directly to a file
+     */
+    def File createCacheFile(String filename, String content)
+    {
+         val cacheFile = new File(cacheDir, filename)
+         var FileOutputStream fileOutputStream = null
+
+         try {
+             fileOutputStream = new FileOutputStream(cacheFile)
+             var bytes = content.bytes
+             fileOutputStream.write(bytes, 0, bytes.length)
+         } catch (IOException e) {
+             e.printStackTrace()
+         }finally {
+             try {
+                 fileOutputStream.close()
+             } catch (IOException e) {
+                 e.printStackTrace()
+             }
          }
 
          return cacheFile

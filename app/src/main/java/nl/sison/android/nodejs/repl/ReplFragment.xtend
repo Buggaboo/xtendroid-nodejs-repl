@@ -69,10 +69,11 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 }
 
 @AddLogTag
-@AndroidLoader
+//@AndroidLoader
 @AndroidFragment(R.layout.fragment_repl) class ReplFragment extends Fragment
-    implements ServiceConnection, LoaderManager$LoaderCallbacks<StringParcel>
+    implements ServiceConnection //, LoaderManager$LoaderCallbacks<StringParcel>
 {
+/*
 	HttpClientLoader httpReplClient = new HttpClientLoader(activity)
 
 	override onLoadFinished(Loader loader, StringParcel parcel) {
@@ -81,7 +82,7 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 
 	override onLoaderReset(Loader<StringParcel> loader) {
 	}
-
+*/
     public new ()
     {
         arguments = new Bundle()
@@ -90,7 +91,7 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
     @OnCreate
     def init() {
         activity.startService(new Intent(activity, ReplService));
-        doBindService()
+        // doBindService(ReplService) // for example
 /*
         if (BuildConfig.DEBUG)
         {
@@ -126,8 +127,11 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 
     var boolean mIsBound = false
 
-    def doBindService() {
-        activity.bindService(new Intent(activity, ReplService), this, Context.BIND_AUTO_CREATE);
+    /**
+     * Usage: doBindService(ReplService)
+     */
+    def doBindService(Class<?> clazz) {
+        activity.bindService(new Intent(activity, clazz), this, Context.BIND_AUTO_CREATE);
         mIsBound = true;
         if(mService != null) {
             mService.IsBoundable();
