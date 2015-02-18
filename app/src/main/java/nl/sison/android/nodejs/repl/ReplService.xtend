@@ -67,7 +67,7 @@ class ReplTextView extends RobotoRegularTextView implements Handler$Callback
     override onAttachedToWindow()
     {
         super.onAttachedToWindow
-        ReplWorker.create(context.cacheDir + '/node-repl.sock', this) // start if necessary
+
     }
 
     override onDetachedFromWindow()

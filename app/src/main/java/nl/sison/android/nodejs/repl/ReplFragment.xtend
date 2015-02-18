@@ -24,7 +24,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import android.util.Log
 
 import nl.sison.android.nodejs.repl.ReplService
-//import nl.sison.android.nodejs.repl.BuildConfig
+import nl.sison.android.nodejs.repl.BuildConfig
 
 import android.content.ServiceConnection
 import android.content.ComponentName
@@ -45,6 +45,8 @@ import java.io.IOException
 
 import android.widget.EditText
 import android.widget.TextView
+
+import android.os.Handler
 
 @AndroidParcelable
 class StringParcel
@@ -75,7 +77,6 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 
 	override onLoadFinished(Loader loader, StringParcel parcel) {
 	    Log.d(TAG, "onLoadFinished: " + parcel.output)
-        //textView.text = parcel.output
 	}
 
 	override onLoaderReset(Loader<StringParcel> loader) {
@@ -90,24 +91,19 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
     def init() {
         activity.startService(new Intent(activity, ReplService));
         doBindService()
-//        if (BuildConfig.DEBUG)
+/*
+        if (BuildConfig.DEBUG)
         {
             LoaderManager.enableDebugLogging(true)
         }
+*/
+        val textView = findViewById(R.id.textView) as Handler$Callback
+        ReplWorker.create(activity.cacheDir + '/node-repl.sock', textView) // start if necessary
     }
 
     override boolean onOptionsItemSelected(MenuItem item) {
-//        if (#[R.id.run, R.id.save, R.id.share, R.id.clear].contains(item.itemId))
         if (R.id.run == item.itemId)
         {
-/*
-            // TODO remove
-            val lm = activity.supportLoaderManager
-            val input = editText.text.toString
-            httpReplClientLoader.input = input
-        	lm.restartLoader(LOADER_HTTP_REPL_CLIENT_ID, null, this);
-        	Log.d(TAG, String.format("run: %s", input))
-*/
             // @+id/meh magic breaks down for custom views
             val editText = findViewById(R.id.editText) as EditText
             ReplWorker.instance.write(editText.text.toString)
@@ -148,7 +144,8 @@ class HttpClientLoader extends BgSupportLoader<StringParcel>
 
     override onDestroy()
     {
-        super.onDestroy()
-        doUnbindService();
+        super.onDestroy
+        doUnbindService
+        ReplWorker.instance.quit
     }
 }
