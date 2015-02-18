@@ -55,6 +55,9 @@ class StringParcel
     String output
 }
 
+/**
+ * Experiment with Loaders
+ */
 @AddLogTag
 class HttpClientLoader extends BgSupportLoader<StringParcel>
 {

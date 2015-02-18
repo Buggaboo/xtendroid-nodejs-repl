@@ -63,7 +63,7 @@ var net = require("net"),
 
 var socketPath = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock";
 
-var server = net.createServer(function(socket) { //'connection' listener
+var socket_server = net.createServer(function(socket) { //'connection' listener
     console.log('server connected');
 
     repl.start({
@@ -74,10 +74,13 @@ var server = net.createServer(function(socket) { //'connection' listener
         socket.end();
     });
 
+/*
+    // WTF would you want this?
     socket.setTimeout(60000, function () {
         socket.destroy();
         fs.unlinkSync(socketPath);
     });
+*/
 
     socket.on('end', function() {
         console.log('server disconnected');
@@ -87,11 +90,11 @@ var server = net.createServer(function(socket) { //'connection' listener
     socket.pipe(socket);
 });
 
-server.listen(socketPath, function() {
+socket_server.listen(socketPath, function() {
     console.log('server bound');
 });
 
-server.on('error', function (e) {
+socket_server.on('error', function (e) {
     if (e.code == 'EADDRINUSE') {
         var clientSocket = new net.Socket();
         clientSocket.on('error', function(e) { // handle error trying to talk to server

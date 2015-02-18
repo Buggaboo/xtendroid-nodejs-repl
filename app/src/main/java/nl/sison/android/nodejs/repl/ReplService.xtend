@@ -239,17 +239,10 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
         }
 
         var read = -1
-        var flag = true
 
-        while(flag)
+        while ((read = mBis.read(buffer)) != -1)
         {
-            read = mBis.read(buffer)
-            if (read == -1) {
-                flag = false // superhack since we don't have break/continue
-            }else
-            {
-                mBaf.append(buffer, 0, read)
-            }
+            mBaf.append(buffer, 0, read)
         }
 
         return new String(mBaf.toByteArray, 'UTF-8')
