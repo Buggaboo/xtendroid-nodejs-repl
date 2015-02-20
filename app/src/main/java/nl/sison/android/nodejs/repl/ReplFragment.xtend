@@ -24,7 +24,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import android.util.Log
 
 import nl.sison.android.nodejs.repl.ReplService
-import nl.sison.android.nodejs.repl.BuildConfig
+//import nl.sison.android.nodejs.repl.BuildConfig // Gradle bug, specific for android
 
 import android.content.ServiceConnection
 import android.content.ComponentName
