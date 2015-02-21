@@ -197,7 +197,6 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
             Log.d(TAG, String.format("bound:%b\tconnected:%b", mSocket.bound, mSocket.connected))
         ])
 
-        mOutputStream = mSocket.outputStream // TODO test if necessary to run this on the ui thread
         mInputStream  = mSocket.inputStream
 
         // urlConn.inputStream signals the outputStream is ready to be sent
@@ -234,8 +233,19 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     def processStatement(String statement) {
         if (!TextUtils.isEmpty(statement))
         {
-            mOutputStream.write(TextUtils.concat(statement, '\n').toString.bytes)
-            mOutputStream.flush
+            try {
+                mOutputStream = mSocket.outputStream // TODO test if necessary to run this on the ui thread
+                mOutputStream.write(TextUtils.concat(statement, '\n').toString.bytes)
+                mOutputStream.flush
+            }catch (Throwable t)
+            {
+                mMainHandler.post([
+                    Log.d(TAG, String.format("Failed to write to socket"))
+                 ])
+            }finally
+            {
+                mOutputStream.close
+            }
         }
 
         var read = -1

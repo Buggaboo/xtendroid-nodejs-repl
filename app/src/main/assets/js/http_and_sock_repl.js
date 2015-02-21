@@ -6,9 +6,13 @@
  *
  * To connect: $ curl -sSNT. localhost:8000
  */
+ var android = require('android');
+ console.log = function (msg) { android.logcat.d('http_and_sock_repl.js', msg); }
+
 var http = require('http'),
     repl = require('repl'),
-    buf0 = new Buffer([0])
+    buf0 = new Buffer([0]),
+    TAG = 'http_and_sock_repl.js';
 
 var http_server = http.createServer(function(req, res) {
     res.setHeader('content-type', 'multipart/octet-stream')
@@ -64,12 +68,12 @@ var net = require("net"),
 var socketPath = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock";
 
 var socket_server = net.createServer(function(socket) { //'connection' listener
-    console.log('server connected');
+    console.log('server connected: ' + socket.address());
 
     repl.start({
         prompt: "node via Unix socket> ",
         input: socket,
-        output: socket
+        output: socket,
     }).on('exit', function() {
         socket.end();
     });
@@ -82,12 +86,16 @@ var socket_server = net.createServer(function(socket) { //'connection' listener
     });
 */
 
+    socket.on('data', function (data) {
+        console.log('data: ' + data);
+        console.log('bytes read: ' + socket.bytesRead);
+        console.log('bytes written: ' + socket.bytesWritten);
+    });
+
     socket.on('end', function() {
         console.log('server disconnected');
     });
 
-    socket.write('hello\r\n');
-    socket.pipe(socket);
 });
 
 socket_server.listen(socketPath, function() {
@@ -100,7 +108,7 @@ socket_server.on('error', function (e) {
         clientSocket.on('error', function(e) { // handle error trying to talk to server
             if (e.code == 'ECONNREFUSED') {  // No other server listening
                 fs.unlinkSync(socketPath);
-                server.listen(socketPath, function() { //'listening' listener
+                socket_server.listen(socketPath, function() { //'listening' listener
                     console.log('server recovered');
                 });
             }
@@ -112,3 +120,22 @@ socket_server.on('error', function (e) {
         });
     }
 });
+
+/**
+ * test baked in logcat
+ */
+/*
+var util = require('util'),
+    android = require('android');
+
+var logcat = android.logcat,
+    android_logcat = android.android_logcat;
+
+var TAG = 'script.js';
+
+android_logcat(3, TAG, util.format('%s: %j', 'json', { 'a' : 'b' }));
+android_logcat(4, TAG, util.format('%s: %j', 'json', { 'a' : 'b' }));
+
+logcat.d(TAG, util.format('%s: %j', 'json', { 'c' : 'd' }));
+logcat.i(TAG, util.format('%s: %j', 'json', { 'c' : 'd' }));
+*/
