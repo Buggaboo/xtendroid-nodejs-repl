@@ -36,25 +36,25 @@
             android:name=".repl.ReplService"
             android:exported="false" />
 
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.AccelerometerService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.AmbientTemperatureService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GameRotationVectorService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GeoMagneticRotationVectorService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GravityService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GyroscopeService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GyroscopeUncalibratedService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.HeartRateService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.LightService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.LinearAccelerationService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.MagneticFieldService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.MagneticFieldUncalibratedService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.PressureService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.ProximityService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.RelativeHumidityService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.RotactionVectorService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.SignificantMotionService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.StepCounterService" />
-        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.StepDetectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.AccelerometerService" android:process=":AccelerometerService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.AmbientTemperatureService" android:process=":AmbientTemperatureService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GameRotationVectorService" android:process=":GameRotationVectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GeoMagneticRotationVectorService" android:process=":GeoMagneticRotationVectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GravityService" android:process=":GravityService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GyroscopeService" android:process=":GyroscopeService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GyroscopeUncalibratedService" android:process=":GyroscopeUncalibratedService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.HeartRateService" android:process=":HeartRateService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.LightService" android:process=":LightService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.LinearAccelerationService" android:process=":LinearAccelerationService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.MagneticFieldService" android:process=":MagneticFieldService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.MagneticFieldUncalibratedService" android:process=":MagneticFieldUncalibratedService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.PressureService" android:process=":PressureService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.ProximityService" android:process=":ProximityService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.RelativeHumidityService" android:process=":RelativeHumidityService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.RotationVectorService" android:process=":RotationVectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.SignificantMotionService" android:process=":SignificantMotionService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.StepCounterService" android:process=":StepCounterService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.StepDetectorService" android:process=":StepDetectorService" />
 
     </application>
 

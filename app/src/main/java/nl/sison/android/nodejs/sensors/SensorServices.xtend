@@ -36,8 +36,8 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         return null // we will not bind this
     }
 
-    val mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
     Sensor mSensor
+    SensorManager mSensorManager
     protected val SENSOR_TYPE = -1 // -1 implies all sensors, override for a specific type
     protected val SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
     protected def void startSensor()
@@ -45,6 +45,8 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         // Caveat: there could be multiple sensors of a type,
         // this implementation assumes there is one of each type
         // feel free to override :)
+        mainHandler.post[ Log.d(TAG, 'Getting sensor service: ' + SENSOR_TYPE_NAME) ]
+        mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         mSensor = mSensorManager.getDefaultSensor(SENSOR_TYPE);
         if (mSensor != null)
         {
@@ -108,10 +110,10 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         val sensor = event.sensor
         objSensor.put('type', sensor.type)
         .put('name', sensor.name)
-        .put('stringType', sensor.stringType)
+        //.put('stringType', sensor.stringType) // unsupported by my Samsung tablet for some reason
         .put('fifoMaxEventCount', sensor.fifoMaxEventCount)
         .put('fifoReservedEventCount', sensor.fifoReservedEventCount)
-        .put('maxDelay', sensor.maxDelay)
+//        .put('maxDelay', sensor.maxDelay) // unsupported by my Samsung tablet for some reason
         .put('minDelay', sensor.minDelay)
         .put('power', sensor.power)
         .put('reportingMode', sensor.reportingMode)
@@ -248,7 +250,7 @@ class RelativeHumidityService extends NodeSensorBaseService
 }
 
 /** TYPE_ROTATION_VECTOR 	A constant describing a rotation vector sensor type. */
-class RotactionVectorService extends NodeSensorBaseService
+class RotationVectorService extends NodeSensorBaseService
 {
     val SENSOR_TYPE = Sensor.TYPE_ROTATION_VECTOR
     val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ROTATION_VECTOR
