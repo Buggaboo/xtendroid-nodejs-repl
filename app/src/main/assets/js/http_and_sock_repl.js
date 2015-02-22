@@ -11,6 +11,7 @@
 
 var http = require('http'),
     repl = require('repl'),
+    util = require('util'),
     buf0 = new Buffer([0]),
     TAG = 'http_and_sock_repl.js';
 
@@ -62,19 +63,24 @@ var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.so
  */
 
 var net = require("net"),
-    repl = require("repl"),
     fs = require('fs');
 
 var socketPath = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock";
+fs.unlinkSync(socketPath);
 
 var socket_server = net.createServer(function(socket) { //'connection' listener
-    console.log('server connected: ' + socket.address());
+    console.log(util.format('server connected: %j', socket.address()));
+
+    socket.on ('connect', function () {
+
+    });
 
     repl.start({
         prompt: "node via Unix socket> ",
         input: socket,
         output: socket,
     }).on('exit', function() {
+        console.log('repl shutdown');
         socket.end();
     });
 
@@ -86,21 +92,23 @@ var socket_server = net.createServer(function(socket) { //'connection' listener
     });
 */
 
-    socket.on('data', function (data) {
-        console.log('data: ' + data);
-        console.log('bytes read: ' + socket.bytesRead);
-        console.log('bytes written: ' + socket.bytesWritten);
-    });
+});
 
-    socket.on('end', function() {
-        console.log('server disconnected');
-    });
+socket_server.on('data', function (data) {
+    console.log('data: ' + data);
+    console.log('bytes read: ' + socket.bytesRead);
+    console.log('bytes written: ' + socket.bytesWritten);
+});
 
+socket_server.on('end', function() {
+    console.log('server disconnected');
+    fs.unlinkSync(socketPath);
 });
 
 socket_server.listen(socketPath, function() {
     console.log('server bound');
 });
+
 
 socket_server.on('error', function (e) {
     if (e.code == 'EADDRINUSE') {
@@ -113,13 +121,16 @@ socket_server.on('error', function (e) {
                 });
             }
         });
+/*
         clientSocket.connect({path: socketPath}, function() {
             console.log('Server running, giving up...');
 //            fs.unlinkSync(socketPath); // TODO review if this is actually what you need
             process.exit();
         });
+*/
     }
 });
+
 
 /**
  * test baked in logcat
