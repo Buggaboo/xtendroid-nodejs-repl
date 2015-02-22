@@ -1,5 +1,6 @@
 package nl.sison.android.nodejs.repl
 
+import nl.sison.android.nodejs.R
 import android.support.v7.app.ActionBarActivity
 import android.support.v4.app.Fragment
 import android.content.res.Configuration
@@ -7,21 +8,14 @@ import android.widget.ArrayAdapter
 import android.view.Menu
 import android.view.MenuItem
 
-import java.io.File
-
 import org.xtendroid.app.AndroidActivity
 import org.xtendroid.app.OnCreate
 
 import nl.sison.android.nodejs.repl.ReplFragment
 
-import static extension org.xtendroid.utils.AlertUtils.*
 import static extension nl.sison.android.nodejs.repl.Settings.*
-import org.xtendroid.annotations.BundleProperty
 
 import org.xtendroid.annotations.AddLogTag
-import android.util.Log
-
-import android.content.Context
 
 import static extension gr.uoa.di.android.helpers.Net.*
 

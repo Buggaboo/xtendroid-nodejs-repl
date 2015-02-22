@@ -1,5 +1,8 @@
 package nl.sison.android.nodejs.repl
 
+
+import nl.sison.android.nodejs.R
+
 import android.support.v4.app.Fragment
 import android.os.Bundle
 import android.support.v4.app.LoaderManager
@@ -24,7 +27,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import android.util.Log
 
 import nl.sison.android.nodejs.repl.ReplService
-//import nl.sison.android.nodejs.repl.BuildConfig // Gradle bug, specific for android
+import nl.sison.android.nodejs.BuildConfig // Gradle bug, specific for android
 
 import android.content.ServiceConnection
 import android.content.ComponentName

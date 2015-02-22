@@ -1,5 +1,7 @@
 package nl.sison.android.nodejs.repl
 
+import nl.sison.android.nodejs.BuildConfig
+
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -15,11 +17,9 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.util.Log
-import android.widget.Toast
 import android.os.IBinder
 
 import android.net.LocalSocket
-import android.net.LocalServerSocket
 import android.net.LocalSocketAddress
 import android.text.TextUtils
 import android.os.Handler
@@ -27,8 +27,6 @@ import android.os.Looper
 import android.os.Message
 import android.os.HandlerThread
 import android.os.Bundle
-import android.widget.TextView
-import android.widget.EditText
 
 import android.content.Context
 
@@ -141,7 +139,6 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
         mViewHandler = new Handler(looper, this)
     }
 
-    OutputStream mOutputStream
     InputStream  mInputStream
     BufferedInputStream mBis
 
@@ -156,7 +153,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     {
         var namespace = LocalSocketAddress.Namespace.FILESYSTEM
         var address = new LocalSocketAddress(mSocketName, namespace)
-        val MAX_ATTEMPTS = 10
+        val MAX_ATTEMPTS = 100
         var attempts = 0
         while (!mSocket.connected)
         {
@@ -204,7 +201,9 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     }
 
     /**
-     * Utility method
+     * Utility method, used twice:
+     * First used to send a message from the ui thread to the worker
+     * then from the worker to the ui.
      */
     static def write(String statement, Handler handler)
     {
@@ -233,18 +232,22 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     def processStatement(String statement) {
         if (!TextUtils.isEmpty(statement))
         {
+            var OutputStream out
             try {
-                mOutputStream = mSocket.outputStream // TODO test if necessary to run this on the ui thread
-                mOutputStream.write(TextUtils.concat(statement, '\n').toString.bytes)
-                mOutputStream.flush
+                out = mSocket.outputStream // TODO test if necessary to run this on the ui thread
+                out.write(TextUtils.concat(statement, '\n').toString.getBytes('UTF-8'))
+                out.flush
             }catch (Throwable t)
             {
                 mMainHandler.post([
-                    Log.d(TAG, String.format("Failed to write to socket"))
+                    Log.e(TAG, String.format("Failed to write to socket"))
                  ])
             }finally
             {
-                mOutputStream.close
+                if (out != null)
+                {
+                    out.close
+                }
             }
         }
 
@@ -268,10 +271,8 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
         if (mSocket != null)
         {
             mSocket.close
-            mOutputStream.close
             mInputStream.close
             mBis.close
-            //mBaf.close
         }
     }
 
@@ -321,8 +322,8 @@ class ReplService extends Service {
 	override onCreate() {
 		super.onCreate()
 
-		// TODO kickstart sensors with LocalServerSocket
-        // TODO redo this as a Reloading the lib kills existing processes
+		// TODO kickstart sensors with LocalServerSocket -- leave it to the Manifest
+        // TODO redo this as a reloading the lib kills existing processes
         new Thread ([
             NodeJNI.start(2, #["nodejs", createCacheFile("http_and_sock_repl.js").absolutePath ]) // runs succesfully
         ]).start()
@@ -365,12 +366,12 @@ class ReplService extends Service {
     def File createCacheFile(String filename)
     {
          val cacheFile = new File(cacheDir, filename)
-/*
-         // always load fresh files
-         if (cacheFile.exists()) {
+
+         // always load fresh files, unless deployed
+         if (cacheFile.exists() && !BuildConfig.DEBUG) {
           return cacheFile
          }
-*/
+
          var InputStream inputStream = null
          var FileOutputStream fileOutputStream = null
 
@@ -417,7 +418,7 @@ class ReplService extends Service {
 
          try {
              fileOutputStream = new FileOutputStream(cacheFile)
-             var bytes = content.bytes
+             var bytes = content.getBytes('UTF-8')
              fileOutputStream.write(bytes, 0, bytes.length)
          } catch (IOException e) {
              e.printStackTrace()

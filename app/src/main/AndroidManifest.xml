@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="nl.sison.android.nodejs.repl" >
+    package="nl.sison.android.nodejs" >
 
     <!-- this is a default nowadays, so every app could be a frigging keylogger
      e.g. 3rd party keyboard -->
@@ -8,13 +8,22 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.barometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.light" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.proximity" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name=".repl.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,10 +33,29 @@
         </activity>
 
         <service
-            android:name=".ReplService"
-            android:exported="false"
+            android:name=".repl.ReplService"
+            android:exported="false" />
 
-            />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.AccelerometerService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.AmbientTemperatureService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GameRotationVectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GeoMagneticRotationVectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GravityService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GyroscopeService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.GyroscopeUncalibratedService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.HeartRateService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.LightService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.LinearAccelerationService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.MagneticFieldService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.MagneticFieldUncalibratedService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.PressureService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.ProximityService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.RelativeHumidityService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.RotactionVectorService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.SignificantMotionService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.StepCounterService" />
+        <service android:enabled="true" android:exported="false" android:isolatedProcess="true" android:name=".sensors.StepDetectorService" />
+
     </application>
 
 </manifest>

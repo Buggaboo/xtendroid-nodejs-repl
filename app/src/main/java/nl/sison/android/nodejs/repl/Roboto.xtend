@@ -1,5 +1,7 @@
 package nl.sison.android.nodejs.repl
 
+import nl.sison.android.nodejs.R
+
 import android.widget.TextView
 import android.widget.EditText
 import android.widget.Button
