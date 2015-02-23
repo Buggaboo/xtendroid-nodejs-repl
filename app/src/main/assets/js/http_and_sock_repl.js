@@ -53,20 +53,24 @@ http_server.listen(8000)
 
 connect with:
 
-var net = require('net');
-var conn = net.createConnection('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock');
-conn.on('connect', function() { console.log('connected to unix socket server');});
+    var net = require('net');
+    var conn = net.createConnection('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock');
+    conn.on('connect', function() { console.log('connected to unix socket server');});
 
-get file descriptor:
+    get file descriptor:
 
-var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock', 'r');
+    var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock', 'r');
  */
 
 var net = require("net"),
     fs = require('fs');
 
 var socketPath = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock";
-fs.unlinkSync(socketPath);
+
+if (fs.existsSync(socketPath))
+{
+    fs.unlinkSync(socketPath);
+}
 
 var socket_server = net.createServer(function(socket) { //'connection' listener
     console.log(util.format('server connected: %j', socket.address()));
@@ -88,7 +92,10 @@ var socket_server = net.createServer(function(socket) { //'connection' listener
     // WTF would you want this?
     socket.setTimeout(60000, function () {
         socket.destroy();
-        fs.unlinkSync(socketPath);
+        if (fs.existsSync(socketPath))
+        {
+            fs.unlinkSync(socketPath);
+        }
     });
 */
 
@@ -102,7 +109,10 @@ socket_server.on('data', function (data) {
 
 socket_server.on('end', function() {
     console.log('server disconnected');
-    fs.unlinkSync(socketPath);
+    if (fs.existsSync(socketPath))
+    {
+        fs.unlinkSync(socketPath);
+    }
 });
 
 socket_server.listen(socketPath, function() {
@@ -115,7 +125,10 @@ socket_server.on('error', function (e) {
         var clientSocket = new net.Socket();
         clientSocket.on('error', function(e) { // handle error trying to talk to server
             if (e.code == 'ECONNREFUSED') {  // No other server listening
-                fs.unlinkSync(socketPath);
+                if (fs.existsSync(socketPath))
+                {
+                    fs.unlinkSync(socketPath);
+                }
                 socket_server.listen(socketPath, function() { //'listening' listener
                     console.log('server recovered');
                 });

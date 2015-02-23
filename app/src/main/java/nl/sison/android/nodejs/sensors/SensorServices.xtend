@@ -20,6 +20,8 @@ import android.os.Looper
 import android.os.Handler
 import android.util.Log
 
+import java.io.File
+
 // Gradle bug, after project clean, MIA, specific for android
 import nl.sison.android.nodejs.BuildConfig
 
@@ -36,9 +38,9 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         return null // we will not bind this
     }
 
-    Sensor mSensor
-    SensorManager mSensorManager
-    protected val SENSOR_TYPE = -1 // -1 implies all sensors, override for a specific type
+    protected Sensor mSensor
+    protected SensorManager mSensorManager
+    protected val SENSOR_TYPE = Sensor.TYPE_ALL
     protected val SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
     protected def void startSensor()
     {
@@ -47,7 +49,19 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         // feel free to override :)
         mainHandler.post[ Log.d(TAG, 'Getting sensor service: ' + SENSOR_TYPE_NAME) ]
         mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        mSensor = mSensorManager.getDefaultSensor(SENSOR_TYPE);
+
+        var sensorList = mSensorManager.getSensorList(SENSOR_TYPE)
+
+        if (sensorList.size > 0)
+        {
+            //mainHandler.post[ Log.i(TAG, String.format('There are multiple sensors for the %s sensor', SENSOR_TYPE_NAME)) ]
+            sensorList.forEach[ s |
+                mainHandler.post[ Log.i(TAG, String.format('available %s sensor: %s', SENSOR_TYPE_NAME, s.name)) ]
+            ]
+        }
+
+        mSensor = mSensorManager.getDefaultSensor(SENSOR_TYPE)
+
         if (mSensor != null)
         {
             mSensorManager.registerListener(this, mSensor, SENSOR_DELAY)
@@ -64,13 +78,12 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
      * Must overload to determine the type of sensor being started
      * and differentiate the domain socket (abstract or not)
      */
-    protected val SENSOR_TYPE_NAME = ''
+    protected val SENSOR_TYPE_NAME = 'ALL'
     def startLocalServerSocket()
     {
-        var sensorType = if (TextUtils.isEmpty(SENSOR_TYPE_NAME)) 'ALL' else SENSOR_TYPE_NAME
+        var abstractDomain = TextUtils.concat(cacheDir.toString, '.sensor_sockets.TYPE_', SENSOR_TYPE_NAME).toString
 
-        mLocalServerSocket= new LocalServerSocket(
-            TextUtils.concat(cacheDir.toString, '/sensor_sockets/TYPE_', sensorType).toString)
+        mLocalServerSocket= new LocalServerSocket(abstractDomain)
 
         // The following will block, so no funky busy loops with sleep necessary
         mLocalSocketSender = mLocalServerSocket.accept
@@ -141,6 +154,15 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 }
 
 /** TYPE_ALL 	A constant describing all sensor types. */
+class SensorService extends NodeSensorBaseService
+{
+    var sepukuHandler = new Handler
+    override void startSensor()
+    {
+        super.startSensor
+        sepukuHandler.postDelayed([ stopSelf ], 30000)
+    }
+}
 
 /** TYPE_ACCELEROMETER 	A constant describing an accelerometer sensor type. */
 class AccelerometerService extends NodeSensorBaseService
