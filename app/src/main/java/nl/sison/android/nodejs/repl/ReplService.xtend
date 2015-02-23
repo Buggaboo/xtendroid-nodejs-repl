@@ -83,6 +83,8 @@ class ReplTextView extends RobotoRegularTextView implements Handler$Callback
 /**
  * This will be added to the Activity
  * Inspired by http://stackoverflow.com/questions/4838207/how-to-create-a-looper-thread-then-send-it-a-message-immediately
+ *
+ * Who needs a Loader?
  */
 @AddLogTag
 final class ReplWorker extends HandlerThread implements Handler$Callback

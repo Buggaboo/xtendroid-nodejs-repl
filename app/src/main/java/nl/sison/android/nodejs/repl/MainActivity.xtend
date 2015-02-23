@@ -39,12 +39,19 @@ import nl.sison.android.nodejs.sensors.SignificantMotionService
 import nl.sison.android.nodejs.sensors.StepCounterService
 import nl.sison.android.nodejs.sensors.StepDetectorService
 
+// TODO determine that 'settings' magic keyword is broken
+// See [Settings](https://github.com/tobykurien/Xtendroid/blob/master/Xtendroid/docs/index.md)
 import static extension nl.sison.android.nodejs.repl.Settings.*
+import static extension android.preference.PreferenceManager.*
 
+import android.content.Context
+
+import android.content.SharedPreferences
+
+import android.util.Log
 import org.xtendroid.annotations.AddLogTag
 
 import static extension gr.uoa.di.android.helpers.Net.*
-
 
 
 /**
@@ -63,69 +70,77 @@ import static extension gr.uoa.di.android.helpers.Net.*
         startServices
     }
 
+    val classes = #[
+        AccelerometerService,
+        AmbientTemperatureService,
+        GameRotationVectorService,
+        GeoMagneticRotationVectorService,
+        GravityService,
+        GyroscopeService,
+        GyroscopeUncalibratedService,
+        HeartRateService,
+        LightService,
+        LinearAccelerationService,
+        MagneticFieldService,
+        MagneticFieldUncalibratedService,
+        PressureService,
+        ProximityService,
+        RelativeHumidityService,
+        RotationVectorService,
+        SignificantMotionService,
+        StepCounterService,
+        StepDetectorService
+    ]
+
     // bash command to generate th startService method calls
     // grep sensors ./src/main/AndroidManifest.xml | sed 's/.*sensors.\(.*\)".*/startService(new Intent(this, \1))/'
     Handler handler = new Handler
+
+    var SharedPreferences$OnSharedPreferenceChangeListener prefsListener
+
+    // applicationContext because Xtendroid, not complaining btw
+    var SharedPreferences prefs // this works on Eclipse...
+
     def startServices ()
     {
-        // Starting them all at the same time ***ks up my machine
-        /*
-        startService(new Intent(this, AccelerometerService))
-        startService(new Intent(this, AmbientTemperatureService))
-        startService(new Intent(this, GameRotationVectorService))
-        startService(new Intent(this, GeoMagneticRotationVectorService))
-        startService(new Intent(this, GravityService))
-        startService(new Intent(this, GyroscopeService))
-        startService(new Intent(this, GyroscopeUncalibratedService))
-        startService(new Intent(this, HeartRateService))
-        startService(new Intent(this, LightService))
-        startService(new Intent(this, LinearAccelerationService))
-        startService(new Intent(this, MagneticFieldService))
-        startService(new Intent(this, MagneticFieldUncalibratedService))
-        startService(new Intent(this, PressureService))
-        startService(new Intent(this, ProximityService))
-        startService(new Intent(this, RelativeHumidityService))
-        startService(new Intent(this, RotationVectorService))
-        startService(new Intent(this, SignificantMotionService))
-        startService(new Intent(this, StepCounterService))
-        startService(new Intent(this, StepDetectorService))
-        */
-        val classes = #[
-            AccelerometerService,
-            AmbientTemperatureService,
-            GameRotationVectorService,
-            GeoMagneticRotationVectorService,
-            GravityService,
-            GyroscopeService,
-            GyroscopeUncalibratedService,
-            HeartRateService,
-            LightService,
-            LinearAccelerationService,
-            MagneticFieldService,
-            MagneticFieldUncalibratedService,
-            PressureService,
-            ProximityService,
-            RelativeHumidityService,
-            RotationVectorService,
-            SignificantMotionService,
-            StepCounterService,
-            StepDetectorService
+        prefs  = (applicationContext as Context).defaultSharedPreferences
+        prefsListener = [ ps, key |
+            val type = classes.findFirst[ c | c.simpleName.snakeCase.equals(key) ]
+            if (ps.getBoolean(key, false))
+            {
+                startService(new Intent(MainActivity.this, type))
+            }else
+            {
+                stopService(new Intent(MainActivity.this, type))
+            }
         ]
 
-        // just run it on the ui thread, sequentially, controlled
+        // register prefs listener
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+
+        // just run it on the ui thread, sequentially, controlled, 3s bursts
         (0..(classes.length-1)).forEach[ i |
-            handler.postDelayed([
-                MainActivity.this.startService(new Intent(MainActivity.this, classes.get(i)))
-            ],  i * 3000)
+            if (prefs.getBoolean(classes.get(i).simpleName.snakeCase, false))
+            {
+                handler.postDelayed([
+                    MainActivity.this.startService(new Intent(MainActivity.this, classes.get(i)))
+                ],  i * 3000)
+            }
         ]
+    }
+
+    /** Because Xtendroid stores the String keys as snake case */
+    static def snakeCase(String ssss)
+    {
+        ssss.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase
     }
 
     def setupFragment()
     {
          // TODO inject text instead of whole fragment
          val tx = supportFragmentManager.beginTransaction
-         fragment = new ReplFragment()
-         tx.add(R.id.container, fragment as Fragment).commit()
+         fragment = new ReplFragment
+         tx.add(R.id.container, fragment as Fragment).commit
     }
     
     MyActionBarDrawerToggle actionBarDrawerToggle
@@ -193,6 +208,12 @@ import static extension gr.uoa.di.android.helpers.Net.*
     override onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig)
         actionBarDrawerToggle.onConfigurationChanged(newConfig)
+    }
+
+    override onDestroy()
+    {
+        super.onDestroy()
+        prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
     }
     
 }
