@@ -113,11 +113,15 @@ import static extension gr.uoa.di.android.helpers.Net.*
 
         // just run it on the ui thread, sequentially, controlled, 3s bursts
         (0..(classes.length-1)).forEach[ i |
-            if (prefs.getBoolean(classes.get(i).simpleName.snakeCase, false))
+            if (prefs.getBoolean(classes.get(i).simpleName.replace('Service','').snakeCase, false))
             {
                 handler.postDelayed([
                     MainActivity.this.startService(new Intent(MainActivity.this, classes.get(i)))
                 ],  i * 3000)
+            }else
+            {
+                // kill immediately, no delay
+                MainActivity.this.stopService(new Intent(MainActivity.this, classes.get(i)))
             }
         ]
     }
@@ -203,12 +207,6 @@ import static extension gr.uoa.di.android.helpers.Net.*
         super.onConfigurationChanged(newConfig)
         actionBarDrawerToggle.onConfigurationChanged(newConfig)
     }
-/*
-    override onDestroy()
-    {
-        super.onDestroy()
-    }
-*/
 }
 
 @AddLogTag
