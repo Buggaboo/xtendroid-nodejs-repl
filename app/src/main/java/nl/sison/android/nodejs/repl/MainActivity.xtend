@@ -136,10 +136,10 @@ import static extension gr.uoa.di.android.helpers.Net.*
     {
         val listView = drawerListView
     
-        val String[] arrayOfWords = #["Services", "Xtend"]
+        val String[] arrayOfWords = #["Sensors", "Xtend"]
         listView.adapter = new ArrayAdapter<String>(this, R.layout.drawer_list_item, arrayOfWords)
         var android.widget.AdapterView.OnItemClickListener listener = [ parent, view, position, id |
-            if ('Services'.equals(arrayOfWords.get(position)))
+            if ('Sensors'.equals(arrayOfWords.get(position)))
             {
                 startActivity(new Intent(applicationContext, SensorServicePreferenceActivity))
             }
@@ -244,16 +244,16 @@ class SensorServicePreferenceActivity extends PreferenceActivity
     override void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState)
 
-        prefs  = (applicationContext as Context).defaultSharedPreferences
+        prefs  = defaultSharedPreferences
 
         prefsListener = [ ps, key |
-            val type = classes.findFirst[ c | c.simpleName.snakeCase.equals(key) ]
+            val type = classes.findFirst[ c | c.simpleName.replace('Service','').snakeCase.equals(key) ]
             if (ps.getBoolean(key, false))
             {
-                startService(new Intent(SensorServicePreferenceActivity.this.applicationContext, type))
+                startService(new Intent(this, type))
             }else
             {
-                stopService(new Intent(SensorServicePreferenceActivity.this.applicationContext, type))
+                stopService(new Intent(this, type))
             }
         ]
         // register prefs listener
