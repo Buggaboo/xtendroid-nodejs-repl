@@ -13,12 +13,17 @@ import org.xtendroid.app.OnCreate
 
 import nl.sison.android.nodejs.repl.ReplFragment
 import android.content.Intent
+import android.os.Bundle
 
 import android.os.Handler
 import android.os.Looper
 
 // Since this is deprecated: import nl.sison.android.nodejs.services.*
 // bash command to generate it: grep sensors ./src/main/AndroidManifest.xml | sed 's/.*sensors.\(.*\)".*/import nl.sison.android.nodejs.sensors.\1/'
+
+// The wildcard is deprecated, hence the noise
+//import nl.sison.android.nodejs.sensors.*
+
 import nl.sison.android.nodejs.sensors.AccelerometerService
 import nl.sison.android.nodejs.sensors.AmbientTemperatureService
 import nl.sison.android.nodejs.sensors.GameRotationVectorService
@@ -42,11 +47,16 @@ import nl.sison.android.nodejs.sensors.StepDetectorService
 // TODO determine that 'settings' magic keyword is broken
 // See [Settings](https://github.com/tobykurien/Xtendroid/blob/master/Xtendroid/docs/index.md)
 import static extension nl.sison.android.nodejs.repl.Settings.*
-import static extension android.preference.PreferenceManager.*
+import static extension android.preference.PreferenceManager.* // broken on android studio
+import android.preference.PreferenceManager
 
 import android.content.Context
 
 import android.content.SharedPreferences
+
+import java.util.List
+import android.preference.PreferenceActivity
+import android.preference.PreferenceFragment
 
 import android.util.Log
 import org.xtendroid.annotations.AddLogTag
@@ -70,6 +80,7 @@ import static extension gr.uoa.di.android.helpers.Net.*
         startServices
     }
 
+    /** java doesn't have const type const, so this datastructure is still modifiable at runtime */
     val classes = #[
         AccelerometerService,
         AmbientTemperatureService,
@@ -95,28 +106,10 @@ import static extension gr.uoa.di.android.helpers.Net.*
     // bash command to generate th startService method calls
     // grep sensors ./src/main/AndroidManifest.xml | sed 's/.*sensors.\(.*\)".*/startService(new Intent(this, \1))/'
     Handler handler = new Handler
-
-    var SharedPreferences$OnSharedPreferenceChangeListener prefsListener
-
-    // applicationContext because Xtendroid, not complaining btw
-    var SharedPreferences prefs // this works on Eclipse...
-
     def startServices ()
     {
-        prefs  = (applicationContext as Context).defaultSharedPreferences
-        prefsListener = [ ps, key |
-            val type = classes.findFirst[ c | c.simpleName.snakeCase.equals(key) ]
-            if (ps.getBoolean(key, false))
-            {
-                startService(new Intent(MainActivity.this, type))
-            }else
-            {
-                stopService(new Intent(MainActivity.this, type))
-            }
-        ]
-
-        // register prefs listener
-        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        val context = applicationContext as Context
+        val SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         // just run it on the ui thread, sequentially, controlled, 3s bursts
         (0..(classes.length-1)).forEach[ i |
@@ -127,12 +120,6 @@ import static extension gr.uoa.di.android.helpers.Net.*
                 ],  i * 3000)
             }
         ]
-    }
-
-    /** Because Xtendroid stores the String keys as snake case */
-    static def snakeCase(String ssss)
-    {
-        ssss.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase
     }
 
     def setupFragment()
@@ -149,16 +136,23 @@ import static extension gr.uoa.di.android.helpers.Net.*
     {
         val listView = drawerListView
     
-        val String[] arrayOfWords = #["Hello", "Xtend"]
+        val String[] arrayOfWords = #["Services", "Xtend"]
         listView.adapter = new ArrayAdapter<String>(this, R.layout.drawer_list_item, arrayOfWords)
-    //    listView.onItemClickListener = [parent, view, position, id|  ]; // TODO add injectable examples
+        var android.widget.AdapterView.OnItemClickListener listener = [ parent, view, position, id |
+            if ('Services'.equals(arrayOfWords.get(position)))
+            {
+                startActivity(new Intent(applicationContext, SensorServicePreferenceActivity))
+            }
+        ] // TODO add injectable examples
+
+        listView.onItemClickListener = listener
     
         val drawer = drawerLayout
     
         actionBarDrawerToggle = new MyActionBarDrawerToggle(this, drawer, toolbar)
     
         // This following line actually reveals the hamburger
-        drawer.post([ actionBarDrawerToggle.syncState() ])
+        drawer.post[ actionBarDrawerToggle.syncState() ]
     
         drawer.drawerListener = actionBarDrawerToggle
     }
@@ -172,9 +166,9 @@ import static extension gr.uoa.di.android.helpers.Net.*
     
     def setupToolbar()
     {
-         supportActionBar = toolbar
-         val actionBar = supportActionBar
-         actionBar.displayHomeAsUpEnabled = true
+        supportActionBar = toolbar
+        val actionBar = supportActionBar
+        actionBar.displayHomeAsUpEnabled = true
     }
     
     /**
@@ -183,9 +177,9 @@ import static extension gr.uoa.di.android.helpers.Net.*
     override onBackPressed() {
         val listView = drawerListView
         if (drawerLayout.isDrawerOpen(listView))
-         drawerLayout.closeDrawer(listView)
+            drawerLayout.closeDrawer(listView)
         else
-         super.onBackPressed()
+            super.onBackPressed()
     }
     
     override boolean onOptionsItemSelected(MenuItem item) {
@@ -209,12 +203,69 @@ import static extension gr.uoa.di.android.helpers.Net.*
         super.onConfigurationChanged(newConfig)
         actionBarDrawerToggle.onConfigurationChanged(newConfig)
     }
-
+/*
     override onDestroy()
     {
         super.onDestroy()
-        prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
     }
-    
+*/
 }
 
+@AddLogTag
+class SensorServicePreferenceActivity extends PreferenceActivity
+{
+    var SharedPreferences prefs
+    var SharedPreferences$OnSharedPreferenceChangeListener prefsListener
+
+    /** Nasty, but somehow public static-ing this doesn't work */
+    val classes = #[
+        AccelerometerService,
+        AmbientTemperatureService,
+        GameRotationVectorService,
+        GeoMagneticRotationVectorService,
+        GravityService,
+        GyroscopeService,
+        GyroscopeUncalibratedService,
+        HeartRateService,
+        LightService,
+        LinearAccelerationService,
+        MagneticFieldService,
+        MagneticFieldUncalibratedService,
+        PressureService,
+        ProximityService,
+        RelativeHumidityService,
+        RotationVectorService,
+        SignificantMotionService,
+        StepCounterService,
+        StepDetectorService
+    ]
+
+
+    override void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState)
+
+        prefs  = (applicationContext as Context).defaultSharedPreferences
+
+        prefsListener = [ ps, key |
+            val type = classes.findFirst[ c | c.simpleName.snakeCase.equals(key) ]
+            if (ps.getBoolean(key, false))
+            {
+                startService(new Intent(SensorServicePreferenceActivity.this.applicationContext, type))
+            }else
+            {
+                stopService(new Intent(SensorServicePreferenceActivity.this.applicationContext, type))
+            }
+        ]
+        // register prefs listener
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+
+        addPreferencesFromResource(R.xml.preference_sensors)
+
+    }
+
+    override void onDestroy()
+    {
+        super.onDestroy
+        prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
+    }
+}

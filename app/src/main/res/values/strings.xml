@@ -14,4 +14,7 @@
     <string name="npm_ls">ls</string>
     <string name="npm_install">install</string>
     <string name="npm_update">update</string>
+
+    <!-- prefs -->
+    <string name="sensor_settings">Sensors</string>
 </resources>

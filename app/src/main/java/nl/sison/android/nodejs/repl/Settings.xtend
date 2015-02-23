@@ -25,4 +25,10 @@ import org.xtendroid.annotations.AndroidPreference
     boolean significantMotionService = false
     boolean stepCounterService = false
     boolean stepDetectorService = false
+
+    /** Because Xtendroid stores the String keys as snake case */
+    static def snakeCase(String ssss)
+    {
+        ssss.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase
+    }
 }

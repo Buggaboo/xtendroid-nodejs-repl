@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="@string/sensor_settings">
+        <!-- grep sensors ./src/main/AndroidManifest.xml | sed 's/.*:\(.*\)Service".*/\1/' | sed -r 's/([a-z]+)([A-Z][a-z]+)/\1_\l\2/g' | tr '[:upper:]' '[:lower:]' | sed 's/\(.*\)/<CheckBoxPreference android:key=\"\1\" android:title=\"\1\" \/>/' > meh.txt -->
+        <CheckBoxPreference android:key="accelerometer" android:title="accelerometer" />
+        <CheckBoxPreference android:key="ambient_temperature" android:title="ambient temperature" />
+        <CheckBoxPreference android:key="game_rotation_vector" android:title="game rotation vector" />
+        <CheckBoxPreference android:key="geo_magnetic_rotation_vector" android:title="geo magnetic rotation vector" />
+        <CheckBoxPreference android:key="gravity" android:title="gravity" />
+        <CheckBoxPreference android:key="gyroscope" android:title="gyroscope" />
+        <CheckBoxPreference android:key="gyroscope_uncalibrated" android:title="gyroscope uncalibrated" />
+        <CheckBoxPreference android:key="heart_rate" android:title="heart rate" />
+        <CheckBoxPreference android:key="light" android:title="light" />
+        <CheckBoxPreference android:key="linear_acceleration" android:title="linear acceleration" />
+        <CheckBoxPreference android:key="magnetic_field" android:title="magnetic field" />
+        <CheckBoxPreference android:key="magnetic_field_uncalibrated" android:title="magnetic field uncalibrated" />
+        <CheckBoxPreference android:key="pressure" android:title="pressure" />
+        <CheckBoxPreference android:key="proximity" android:title="proximity" />
+        <CheckBoxPreference android:key="relative_humidity" android:title="relative humidity" />
+        <CheckBoxPreference android:key="rotation_vector" android:title="rotation vector" />
+        <CheckBoxPreference android:key="significant_motion" android:title="significant motion" />
+        <CheckBoxPreference android:key="step_counter" android:title="step counter" />
+        <CheckBoxPreference android:key="step_detector" android:title="step detector" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
