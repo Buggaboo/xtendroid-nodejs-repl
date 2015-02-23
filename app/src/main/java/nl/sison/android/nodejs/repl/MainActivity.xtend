@@ -149,7 +149,7 @@ import static extension gr.uoa.di.android.helpers.Net.*
     MyActionBarDrawerToggle actionBarDrawerToggle
     
     def setupDrawerLayout()
-    {
+    { 
         val listView = drawerListView
     
         val String[] arrayOfWords = #["Sensors", "About"]

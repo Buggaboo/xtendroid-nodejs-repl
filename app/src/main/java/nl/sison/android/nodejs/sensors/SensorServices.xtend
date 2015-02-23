@@ -81,9 +81,9 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     protected val SENSOR_TYPE_NAME = 'ALL'
     def startLocalServerSocket()
     {
-        var abstractDomain = TextUtils.concat(cacheDir.toString, '.sensor_sockets.TYPE_', SENSOR_TYPE_NAME).toString
+        var location = TextUtils.concat(cacheDir.toString, '/sensor_sockets.TYPE/', SENSOR_TYPE_NAME).toString
 
-        mLocalServerSocket= new LocalServerSocket(abstractDomain)
+        mLocalServerSocket= new LocalServerSocket(location)
 
         // The following will block, so no funky busy loops with sleep necessary
         mLocalSocketSender = mLocalServerSocket.accept
@@ -149,6 +149,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     {
         super.onDestroy
         mainHandler.post[ Log.d(TAG, 'Destroying sensor service: ' + SENSOR_TYPE_NAME) ]
+        mLocalServerSocket.close
         mSensorManager.unregisterListener(this)
     }
 }
@@ -160,6 +161,8 @@ class SensorService extends NodeSensorBaseService
     override void startSensor()
     {
         super.startSensor
+        // TODO
+        // Highlight actual working sensors, deactivate unsupported ones
         sepukuHandler.postDelayed([ stopSelf ], 30000)
     }
 }
