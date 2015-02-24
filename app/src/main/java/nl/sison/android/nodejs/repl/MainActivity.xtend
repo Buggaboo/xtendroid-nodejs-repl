@@ -149,7 +149,7 @@ import static extension gr.uoa.di.android.helpers.Net.*
     MyActionBarDrawerToggle actionBarDrawerToggle
     
     def setupDrawerLayout()
-    { 
+    {
         val listView = drawerListView
     
         val String[] arrayOfWords = #["Sensors", "About"]
@@ -168,7 +168,7 @@ import static extension gr.uoa.di.android.helpers.Net.*
         actionBarDrawerToggle = new MyActionBarDrawerToggle(this, drawer, toolbar)
     
         // This following line actually reveals the hamburger
-        drawer.post[ actionBarDrawerToggle.syncState() ]
+        drawer.post[ actionBarDrawerToggle.syncState ]
     
         drawer.drawerListener = actionBarDrawerToggle
     }
@@ -195,7 +195,7 @@ import static extension gr.uoa.di.android.helpers.Net.*
         if (drawerLayout.isDrawerOpen(listView))
             drawerLayout.closeDrawer(listView)
         else
-            super.onBackPressed()
+            super.onBackPressed
     }
     
     override boolean onOptionsItemSelected(MenuItem item) {

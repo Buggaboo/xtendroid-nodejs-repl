@@ -21,6 +21,7 @@ import android.os.Handler
 import android.util.Log
 
 import java.io.File
+import java.io.IOException
 
 // Gradle bug, after project clean, MIA, specific for android
 import nl.sison.android.nodejs.BuildConfig
@@ -47,6 +48,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         // Caveat: there could be multiple sensors of a type,
         // this implementation assumes there is one of each type
         // feel free to override :)
+        // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
         mainHandler.post[ Log.d(TAG, 'Getting sensor service: ' + SENSOR_TYPE_NAME) ]
         mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
@@ -81,9 +83,15 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     protected val SENSOR_TYPE_NAME = 'ALL'
     def startLocalServerSocket()
     {
+        // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
         var location = TextUtils.concat(cacheDir.toString, '/sensor_sockets.TYPE/', SENSOR_TYPE_NAME).toString
-
-        mLocalServerSocket= new LocalServerSocket(location)
+        try {
+            mLocalServerSocket= new LocalServerSocket('@' + location)
+        }catch (IOException e)
+        {
+            Log.e(TAG, e.message)
+            stopSelf
+        }
 
         // The following will block, so no funky busy loops with sleep necessary
         mLocalSocketSender = mLocalServerSocket.accept
@@ -154,7 +162,8 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     }
 }
 
-/** TYPE_ALL 	A constant describing all sensor types. */
+/** TYPE_ALL 	A constant describing all sensor types.
+ * This was intended as a pre-scan of available Sensors */
 class SensorService extends NodeSensorBaseService
 {
     var sepukuHandler = new Handler
@@ -163,7 +172,7 @@ class SensorService extends NodeSensorBaseService
         super.startSensor
         // TODO
         // Highlight actual working sensors, deactivate unsupported ones
-        sepukuHandler.postDelayed([ stopSelf ], 30000)
+        sepukuHandler.postDelayed([ stopSelf ], 300000)
     }
 }
 
@@ -321,3 +330,7 @@ android.hardware.sensor.proximity   The application uses the device's proximity 
 android.hardware.sensor.stepcounter     The application uses the device's step counter.
 android.hardware.sensor.stepdetector
 */
+
+// TODO - NFC, Bluetooth, Camera, Sound IO, ...
+// Design ideas: only turn on services, that the user actually wants to use at that time.
+// Do not start stuff by default.

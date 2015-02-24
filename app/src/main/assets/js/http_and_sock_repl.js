@@ -57,9 +57,20 @@ connect with:
     var conn = net.createConnection('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock');
     conn.on('connect', function() { console.log('connected to unix socket server');});
 
-    get file descriptor:
+get file descriptor:
 
     var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock', 'r');
+
+connect with LocalServerSocket sensors:
+
+    var net = require('net');
+    var conn = net.createConnection('@/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL');
+    conn.on('connect', function() { console.log('connected to unix socket server');});
+    conn.on('data', function () { console.log(data) });
+
+get file descriptor, if non-abstract:
+
+    var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL', 'r');
  */
 
 var net = require("net"),
