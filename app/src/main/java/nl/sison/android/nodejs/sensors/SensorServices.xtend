@@ -98,10 +98,11 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     def startLocalServerSocket()
     {
         // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
-        var location = TextUtils.concat(cacheDir.toString, '/sensor_sockets.TYPE/', SENSOR_TYPE_NAME).toString
+        val location = TextUtils.concat(cacheDir.toString, '/sensor_sockets.TYPE/', SENSOR_TYPE_NAME).toString
         try {
-            val addr = new LocalSocketAddress(location, LocalSocketAddress.Namespace.FILESYSTEM)
 /*
+            val addr = new LocalSocketAddress(location, LocalSocketAddress.Namespace.FILESYSTEM)
+
             // LocalSocketServer::new
             val clazz = Class.forName('android.net.LocalSocketImpl')
             val ctors = clazz.declaredConstructors
@@ -171,11 +172,13 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 */
             // finally...
             // LocalSocketServer::new
-            mLocalServerSocket =
-                new LocalServerSocket(NodeJNI.createLocalSocket(location).createFileDescriptor)
+            new Thread[
+                mLocalServerSocket =
+                    new LocalServerSocket(NodeJNI.createLocalSocket(location).createFileDescriptor)
+                // The following will block, so no funky busy loops with sleep necessary
+                mLocalSocketSender = mLocalServerSocket.accept
+            ].start
 
-            // The following will block, so no funky busy loops with sleep necessary
-            mLocalSocketSender = mLocalServerSocket.accept
         }catch (IOException e)
         {
             Log.e(TAG, e.message)
