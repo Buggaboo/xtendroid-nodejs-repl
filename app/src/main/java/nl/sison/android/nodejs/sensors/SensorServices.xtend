@@ -97,8 +97,12 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     var FileDescriptor mFileDescriptor
     def startLocalServerSocket()
     {
-        // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
-        val location = TextUtils.concat(cacheDir.toString, '/sensor_sockets.TYPE/', SENSOR_TYPE_NAME).toString
+        // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets/TYPE_ALL.sock
+        val location = TextUtils.concat(cacheDir.toString, '/sensor_sockets/TYPE_', SENSOR_TYPE_NAME, '.sock').toString
+
+        // connect the path inbetween
+        new File(location.replace(SENSOR_TYPE_NAME + '.sock', '')).mkdirs
+
         try {
 /*
             val addr = new LocalSocketAddress(location, LocalSocketAddress.Namespace.FILESYSTEM)
@@ -179,6 +183,8 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
                 mLocalSocketSender = mLocalServerSocket.accept
             ].start
 
+            // TODO start NodeJNI client, use process.argv to pass on the intended path
+
         }catch (IOException e)
         {
             Log.e(TAG, e.message)
@@ -199,7 +205,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 
     override onCreate()
     {
-        super.onCreate()
+        super.onCreate
         startSensor // if it's not available, just GTFO
         startLocalServerSocket
     }
@@ -231,10 +237,10 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         val sensor = event.sensor
         objSensor.put('type', sensor.type)
         .put('name', sensor.name)
-        //.put('stringType', sensor.stringType) // unsupported by my Samsung tablet for some reason
+        .put('stringType', sensor.stringType) // unsupported by my Samsung tablet for some reason
         .put('fifoMaxEventCount', sensor.fifoMaxEventCount)
         .put('fifoReservedEventCount', sensor.fifoReservedEventCount)
-//        .put('maxDelay', sensor.maxDelay) // unsupported by my Samsung tablet for some reason
+        .put('maxDelay', sensor.maxDelay) // unsupported by my Samsung tablet for some reason
         .put('minDelay', sensor.minDelay)
         .put('power', sensor.power)
         .put('reportingMode', sensor.reportingMode)

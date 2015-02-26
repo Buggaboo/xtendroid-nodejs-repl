@@ -64,18 +64,20 @@ get file descriptor:
 connect with LocalServerSocket sensors:
 
     var net = require('net');
-    var conn = net.createConnection('@/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL');
+    var conn = net.createConnection('/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets/TYPE_ALL.sock');
     conn.on('connect', function() { console.log('connected to unix socket server');});
     conn.on('data', function () { console.log(data) });
 
 get file descriptor, if non-abstract:
 
-    var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL', 'r');
+    var fd = fs.openSync('/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets/TYPE_ALL.sock', 'r');
  */
 
 var net = require("net"),
     fs = require('fs');
 
+// TODO refactor out hard coded path and replace with:
+// var socketPath = process.argv[2]
 var socketPath = "/data/data/nl.sison.android.nodejs.repl/cache/node-repl.sock";
 
 if (fs.existsSync(socketPath))

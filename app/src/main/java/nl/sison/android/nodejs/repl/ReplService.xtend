@@ -316,7 +316,7 @@ class ReplService extends Service {
 	}
 
 	override onCreate() {
-		super.onCreate()
+		super.onCreate
 
 		// TODO kickstart sensors with LocalServerSocket -- leave it to the Manifest
         // TODO redo this as a reloading the lib kills existing processes
@@ -341,11 +341,6 @@ class ReplService extends Service {
     def File createCacheFile(String filename)
     {
          val cacheFile = new File(cacheDir, filename)
-
-         // always load fresh files, unless deployed
-         if (cacheFile.exists() && !BuildConfig.DEBUG) {
-          return cacheFile
-         }
 
          var InputStream inputStream = null
          var FileOutputStream fileOutputStream = null
