@@ -59,12 +59,7 @@ class ReplTextView extends RobotoRegularTextView implements Handler$Callback
 {
     public static String KEY_RESULT = 'result'
 
-    override onDetachedFromWindow()
-    {
-        super.onDetachedFromWindow
-        ReplWorker.instance.quit
-    }
-
+    // TODO found a Xtendroid bug (of the author's own making... doh), go fix. @CustomView
     override init(Context context)
     {
         super.init(context)
