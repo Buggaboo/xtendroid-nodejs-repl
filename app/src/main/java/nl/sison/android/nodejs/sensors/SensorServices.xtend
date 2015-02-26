@@ -52,33 +52,34 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 
     protected Sensor mSensor
     protected SensorManager mSensorManager
-    protected val SENSOR_TYPE = Sensor.TYPE_ALL
+    protected var SENSOR_TYPE = Sensor.TYPE_ALL
+    protected var SENSOR_TYPE_NAME = 'ALL'
     protected val SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
-    protected def void startSensor()
+    protected def void startSensor(int sensorType, String sensorTypeName)
     {
         // Caveat: there could be multiple sensors of a type,
         // this implementation assumes there is one of each type
         // feel free to override :)
         // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
-        Log.d(TAG, 'Getting sensor service: ' + SENSOR_TYPE_NAME)
+        Log.d(TAG, 'Getting sensor service: ' + sensorTypeName)
         mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-        var sensorList = mSensorManager.getSensorList(SENSOR_TYPE)
+        var sensorList = mSensorManager.getSensorList(sensorType)
 
         if (sensorList.size > 0)
         {
             //mainHandler.post[ Log.i(TAG, String.format('There are multiple sensors for the %s sensor', SENSOR_TYPE_NAME)) ]
             sensorList.forEach[ s |
-                Log.i(TAG, String.format('available %s sensor: %s', SENSOR_TYPE_NAME, s.name))
+                Log.i(TAG, String.format('available %s sensor: %s', sensorTypeName, s.name))
             ]
         }
 
-        mSensor = mSensorManager.getDefaultSensor(SENSOR_TYPE)
+        mSensor = mSensorManager.getDefaultSensor(sensorType)
 
         if (mSensor != null)
         {
             mSensorManager.registerListener(this, mSensor, SENSOR_DELAY)
-            Log.d(TAG, 'Running sensor service: ' + SENSOR_TYPE_NAME)
+            Log.d(TAG, 'Running sensor service: ' + sensorTypeName)
         }else
             {stopSelf} // harakiri
     }
@@ -91,17 +92,17 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
      * Must overload to determine the type of sensor being started
      * and differentiate the domain socket (abstract or not)
      */
-    protected val SENSOR_TYPE_NAME = 'ALL'
     val SOCKET_STREAM = 2
     val BACK_LOG = 50
     var FileDescriptor mFileDescriptor
-    def startLocalServerSocket()
+    protected def startLocalServerSocket(String sensorTypeName)
     {
         // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets/TYPE_ALL.sock
-        val location = TextUtils.concat(cacheDir.toString, '/sensor_sockets/TYPE_', SENSOR_TYPE_NAME, '.sock').toString
+        val location = TextUtils.concat(cacheDir.toString, '/sensor_sockets/TYPE_', sensorTypeName, '.sock').toString
+        Log.d(TAG + ' location', location)
 
         // connect the path inbetween
-        new File(location.replace(SENSOR_TYPE_NAME + '.sock', '')).mkdirs
+        new File(location.replace(sensorTypeName + '.sock', '')).mkdirs
 
         try {
             new Thread[
@@ -134,8 +135,8 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     override onCreate()
     {
         super.onCreate
-        startSensor // if it's not available, just GTFO
-        startLocalServerSocket
+        startSensor(SENSOR_TYPE, SENSOR_TYPE_NAME) // if it's not available, just GTFO
+        startLocalServerSocket(SENSOR_TYPE_NAME)
     }
 
     override int onStartCommand(Intent intent, int flags, int startId)
@@ -211,9 +212,9 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 class SensorService extends NodeSensorBaseService
 {
     var sepukuHandler = new Handler
-    override void startSensor()
+    override void startSensor(int type, String name)
     {
-        super.startSensor
+        super.startSensor(type, name)
         // TODO
         // Highlight actual working sensors, deactivate unsupported ones
         sepukuHandler.postDelayed([ stopSelf ], 300000)
@@ -223,85 +224,85 @@ class SensorService extends NodeSensorBaseService
 /** TYPE_ACCELEROMETER 	A constant describing an accelerometer sensor type. */
 class AccelerometerService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_ACCELEROMETER
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ACCELEROMETER
+    protected var SENSOR_TYPE = Sensor.TYPE_ACCELEROMETER
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ACCELEROMETER
 }
 
 /** TYPE_AMBIENT_TEMPERATURE 	A constant describing an ambient temperature sensor type. */
 class AmbientTemperatureService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_AMBIENT_TEMPERATURE
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_AMBIENT_TEMPERATURE
+    protected var SENSOR_TYPE = Sensor.TYPE_AMBIENT_TEMPERATURE
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_AMBIENT_TEMPERATURE
 }
 
 /** TYPE_GAME_ROTATION_VECTOR 	A constant describing an uncalibrated rotation vector sensor type. */
 class GameRotationVectorService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_GAME_ROTATION_VECTOR
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GAME_ROTATION_VECTOR
+    protected var SENSOR_TYPE = Sensor.TYPE_GAME_ROTATION_VECTOR
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GAME_ROTATION_VECTOR
 }
 
 /** TYPE_GEOMAGNETIC_ROTATION_VECTOR 	A constant describing a geo-magnetic rotation vector. */
 class GeoMagneticRotationVectorService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GEOMAGNETIC_ROTATION_VECTOR
+    protected var SENSOR_TYPE = Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GEOMAGNETIC_ROTATION_VECTOR
 }
 
 /** TYPE_GRAVITY 	A constant describing a gravity sensor type. */
 class GravityService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_GRAVITY
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GRAVITY
+    protected var SENSOR_TYPE = Sensor.TYPE_GRAVITY
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GRAVITY
 }
 
 /** TYPE_GYROSCOPE 	A constant describing a gyroscope sensor type. */
 class GyroscopeService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_GYROSCOPE
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GYROSCOPE
+    protected var SENSOR_TYPE = Sensor.TYPE_GYROSCOPE
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GYROSCOPE
 }
 
 /** TYPE_GYROSCOPE_UNCALIBRATED 	A constant describing an uncalibrated gyroscope sensor type. */
 class GyroscopeUncalibratedService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_GYROSCOPE_UNCALIBRATED
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GYROSCOPE_UNCALIBRATED
+    protected var SENSOR_TYPE = Sensor.TYPE_GYROSCOPE_UNCALIBRATED
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GYROSCOPE_UNCALIBRATED
 }
 
 /** TYPE_HEART_RATE 	A constant describing a heart rate monitor. */
 class HeartRateService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_HEART_RATE
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_HEART_RATE
+    protected var SENSOR_TYPE = Sensor.TYPE_HEART_RATE
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_HEART_RATE
 }
 
 /** TYPE_LIGHT 	A constant describing a light sensor type. */
 class LightService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_LIGHT
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_LIGHT
+    protected var SENSOR_TYPE = Sensor.TYPE_LIGHT
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_LIGHT
 }
 
 /** TYPE_LINEAR_ACCELERATION 	A constant describing a linear acceleration sensor type. */
 class LinearAccelerationService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_LINEAR_ACCELERATION
+    protected var SENSOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_LINEAR_ACCELERATION
 }
 
 /** TYPE_MAGNETIC_FIELD 	A constant describing a magnetic field sensor type. */
 class MagneticFieldService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_MAGNETIC_FIELD
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_MAGNETIC_FIELD
+    protected var SENSOR_TYPE = Sensor.TYPE_MAGNETIC_FIELD
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_MAGNETIC_FIELD
 }
 
 /** TYPE_MAGNETIC_FIELD_UNCALIBRATED 	A constant describing an uncalibrated magnetic field sensor type. */
 class MagneticFieldUncalibratedService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_MAGNETIC_FIELD_UNCALIBRATED
+    protected var SENSOR_TYPE = Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_MAGNETIC_FIELD_UNCALIBRATED
 }
 
 /** TYPE_ORIENTATION 	This constant was deprecated in API level 8. use SensorManager.getOrientation() instead. */
@@ -309,50 +310,50 @@ class MagneticFieldUncalibratedService extends NodeSensorBaseService
 /** TYPE_PRESSURE 	A constant describing a pressure sensor type. */
 class PressureService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_PRESSURE
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_PRESSURE
+    protected var SENSOR_TYPE = Sensor.TYPE_PRESSURE
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_PRESSURE
 }
 
 /** TYPE_PROXIMITY 	A constant describing a proximity sensor type. */
 class ProximityService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_PROXIMITY
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_PROXIMITY
+    protected var SENSOR_TYPE = Sensor.TYPE_PROXIMITY
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_PROXIMITY
 }
 
 /** TYPE_RELATIVE_HUMIDITY 	A constant describing a relative humidity sensor type. */
 class RelativeHumidityService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_RELATIVE_HUMIDITY
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_RELATIVE_HUMIDITY
+    protected var SENSOR_TYPE = Sensor.TYPE_RELATIVE_HUMIDITY
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_RELATIVE_HUMIDITY
 }
 
 /** TYPE_ROTATION_VECTOR 	A constant describing a rotation vector sensor type. */
 class RotationVectorService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_ROTATION_VECTOR
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ROTATION_VECTOR
+    protected var SENSOR_TYPE = Sensor.TYPE_ROTATION_VECTOR
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ROTATION_VECTOR
 }
 
 /** TYPE_SIGNIFICANT_MOTION 	A constant describing a significant motion trigger sensor. */
 class SignificantMotionService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_SIGNIFICANT_MOTION
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_SIGNIFICANT_MOTION
+    protected var SENSOR_TYPE = Sensor.TYPE_SIGNIFICANT_MOTION
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_SIGNIFICANT_MOTION
 }
 
 /** TYPE_STEP_COUNTER 	A constant describing a step counter sensor. */
 class StepCounterService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_STEP_COUNTER
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_STEP_COUNTER
+    protected var SENSOR_TYPE = Sensor.TYPE_STEP_COUNTER
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_STEP_COUNTER
 }
 
 /** TYPE_STEP_DETECTOR 	A constant describing a step detector sensor. */
 class StepDetectorService extends NodeSensorBaseService
 {
-    val SENSOR_TYPE = Sensor.TYPE_STEP_DETECTOR
-    val SENSOR_TYPE_NAME = Sensor.STRING_TYPE_STEP_DETECTOR
+    protected var SENSOR_TYPE = Sensor.TYPE_STEP_DETECTOR
+    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_STEP_DETECTOR
 }
 
 /** TYPE_TEMPERATURE 	This constant was deprecated in API level 14. use Sensor.TYPE_AMBIENT_TEMPERATURE instead. */
