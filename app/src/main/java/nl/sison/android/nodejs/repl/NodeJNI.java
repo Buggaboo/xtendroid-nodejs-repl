@@ -11,5 +11,6 @@ public class NodeJNI {
     }
 
     public static native int start(int argc, String[] argv);
+    public static native int createLocalSocket(String where); // int socket(AF_LOCAL, SOCKET_STREAM, 0);
 
 }

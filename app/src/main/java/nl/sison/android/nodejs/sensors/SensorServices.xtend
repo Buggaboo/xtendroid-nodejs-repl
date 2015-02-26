@@ -4,6 +4,8 @@ import android.app.Service
 import android.content.Intent
 
 import android.net.LocalSocket
+
+import android.net.LocalSocketAddress
 import android.net.LocalServerSocket
 import android.text.TextUtils
 
@@ -20,13 +22,22 @@ import android.os.Looper
 import android.os.Handler
 import android.util.Log
 
+import android.system.Os
+import android.system.OsConstants
+import java.io.FileDescriptor
+
 import java.io.File
 import java.io.IOException
+
+import nl.sison.android.nodejs.repl.NodeJNI
+
 
 // Gradle bug, after project clean, MIA, specific for android
 import nl.sison.android.nodejs.BuildConfig
 
 import org.xtendroid.annotations.AddLogTag
+
+import java.lang.reflect.Method
 
 
 @AddLogTag
@@ -49,7 +60,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         // this implementation assumes there is one of each type
         // feel free to override :)
         // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
-        mainHandler.post[ Log.d(TAG, 'Getting sensor service: ' + SENSOR_TYPE_NAME) ]
+        Log.d(TAG, 'Getting sensor service: ' + SENSOR_TYPE_NAME)
         mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
         var sensorList = mSensorManager.getSensorList(SENSOR_TYPE)
@@ -58,7 +69,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         {
             //mainHandler.post[ Log.i(TAG, String.format('There are multiple sensors for the %s sensor', SENSOR_TYPE_NAME)) ]
             sensorList.forEach[ s |
-                mainHandler.post[ Log.i(TAG, String.format('available %s sensor: %s', SENSOR_TYPE_NAME, s.name)) ]
+                Log.i(TAG, String.format('available %s sensor: %s', SENSOR_TYPE_NAME, s.name))
             ]
         }
 
@@ -67,7 +78,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         if (mSensor != null)
         {
             mSensorManager.registerListener(this, mSensor, SENSOR_DELAY)
-            mainHandler.post[ Log.d(TAG, 'Running sensor service: ' + SENSOR_TYPE_NAME) ]
+            Log.d(TAG, 'Running sensor service: ' + SENSOR_TYPE_NAME)
         }else
             {stopSelf} // harakiri
     }
@@ -81,21 +92,109 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
      * and differentiate the domain socket (abstract or not)
      */
     protected val SENSOR_TYPE_NAME = 'ALL'
+    val SOCKET_STREAM = 2
+    val BACK_LOG = 50
+    var FileDescriptor mFileDescriptor
     def startLocalServerSocket()
     {
         // /data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets.TYPE/ALL
         var location = TextUtils.concat(cacheDir.toString, '/sensor_sockets.TYPE/', SENSOR_TYPE_NAME).toString
         try {
-            mLocalServerSocket= new LocalServerSocket('@' + location)
+            val addr = new LocalSocketAddress(location, LocalSocketAddress.Namespace.FILESYSTEM)
+/*
+            // LocalSocketServer::new
+            val clazz = Class.forName('android.net.LocalSocketImpl')
+            val ctors = clazz.declaredConstructors
+
+            ctors.forEach[ c | Log.d(TAG, c.toString) ]
+
+            // Change the accessible property of the constructor.
+            val ctor = ctors.get(0)
+            ctor.accessible = true
+            val impl = ctor.newInstance(null)
+
+            clazz.methods.forEach[ m | Log.d(TAG, m.toString) ]
+
+            val create = clazz.getDeclaredMethod('create', #[ Integer.TYPE ])
+            create.invoke(impl, #[ SOCKET_STREAM ]) // 4.4: IOException no fd.
+
+            Thread.sleep(2000)
+
+            val bind = clazz.getDeclaredMethod('bind', #[ LocalSocketAddress ])
+            bind.invoke(impl, #[ addr ])
+
+            val listen = clazz.getDeclaredMethod('listen', #[ Integer.TYPE ])
+            listen.invoke(impl, #[ BACK_LOG ])
+
+            // LocalSocketServer::accept
+            val impl2 = ctor.newInstance(null)
+            val accept = clazz.getDeclaredMethod('accept', #[ clazz ])
+            accept.invoke(impl, #[ impl2 ])
+
+            //var ls = new LocalSocket(impl2, 2)
+            val lsCtors = Class.forName('android.net.LocalSocket').declaredConstructors
+
+            val lsCtor = lsCtors.get(3)
+            lsCtor.accessible = true
+
+            // The following will block, so no funky busy loops with sleep necessary
+            mLocalSocketSender = lsCtor.newInstance(impl2, SOCKET_STREAM) as LocalSocket
+*/
+            // First attempt, starting the 2nd...
+            // phrack, android.system.Os is only available from api level 21
+/*
+            if (android.os.Build.VERSION.SDK_INT == 21)
+            {
+                val AF_UNIX = 1
+                mFileDescriptor = Os.socket(AF_UNIX, SOCKET_STREAM, 0)
+
+                //mLocalServerSocket = new LocalServerSocket(mFileDescriptor) // dead end, no bind
+
+                // LocalSocketServer::new
+                val clazz = Class.forName('android.net.LocalSocketImpl')
+                val ctors = clazz.declaredConstructors
+
+                // Change the accessible property of the constructor.
+                val ctor = ctors.get(1)
+                ctor.accessible = true
+                val impl = ctor.newInstance(mFileDescriptor)
+
+                val bind = clazz.getDeclaredMethod('bind', #[ LocalSocketAddress ])
+                bind.invoke(impl, #[ addr ])
+
+                val listen = clazz.getDeclaredMethod('listen', #[ Integer.TYPE ])
+                listen.invoke(impl, #[ BACK_LOG ])
+            }else
+            {
+                // use own NDK JNI solution... fragmentation blues...
+            }
+*/
+            // finally...
+            // LocalSocketServer::new
+            /*
+            mLocalServerSocket =
+                new LocalServerSocket(NodeJNI.createLocalSocket(location).createFileDescriptor)
+
+            // The following will block, so no funky busy loops with sleep necessary
+            mLocalSocketSender = mLocalServerSocket.accept
+            */
         }catch (IOException e)
         {
             Log.e(TAG, e.message)
             stopSelf
         }
-
-        // The following will block, so no funky busy loops with sleep necessary
-        mLocalSocketSender = mLocalServerSocket.accept
     }
+
+    /**
+	 * Leverage reflection to call ZygoteInit#createFileDescriptor, even GingerBread has it
+	 */
+	static def createFileDescriptor(int fdi)
+	{
+        var cls = Class.forName('com.android.internal.os.ZygoteInit')
+        val method = cls.getDeclaredMethod('createFileDescriptor', Integer.TYPE)
+        method.accessible = true
+        return method.invoke(null, #[ fdi ]) as FileDescriptor
+	}
 
     override onCreate()
     {
@@ -156,8 +255,9 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
     override onDestroy()
     {
         super.onDestroy
-        mainHandler.post[ Log.d(TAG, 'Destroying sensor service: ' + SENSOR_TYPE_NAME) ]
-        mLocalServerSocket.close
+        Log.d(TAG, 'Destroying sensor service: ' + SENSOR_TYPE_NAME)
+        if (mLocalServerSocket != null)
+            { mLocalServerSocket.close }
         mSensorManager.unregisterListener(this)
     }
 }

@@ -155,7 +155,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     {
         var namespace = LocalSocketAddress.Namespace.FILESYSTEM
         var address = new LocalSocketAddress(mSocketName, namespace)
-        val MAX_ATTEMPTS = 100
+        val MAX_ATTEMPTS = 10
         var attempts = 0
         while (!mSocket.connected)
         {
@@ -171,13 +171,11 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
                 Thread.sleep(3000) // try again in 3s
             }
 
-            if (attempts > 10)
+            if (attempts > MAX_ATTEMPTS)
             {
-                mMainHandler.post([
-                    val errorExceededAttempts = String.format("Max allowed connection attempts (%d) to %s exceeded, aborting.", MAX_ATTEMPTS, mSocketName)
-                    Log.e(TAG, errorExceededAttempts)
-                    // mTextView.text = errorExceededAttempts // TODO pass Message to mCallback
-                ])
+                val errorExceededAttempts = String.format("Max allowed connection attempts (%d) to %s exceeded, aborting.", MAX_ATTEMPTS, mSocketName)
+                Log.e(TAG, errorExceededAttempts)
+                // mTextView.text = errorExceededAttempts // TODO pass Message to mCallback
 
                 return
             }
@@ -192,9 +190,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
      */
     def setupLocalSocketStreams()
     {
-        mMainHandler.post([
-            Log.d(TAG, String.format("bound:%b\tconnected:%b", mSocket.bound, mSocket.connected))
-        ])
+        Log.d(TAG, String.format("bound:%b\tconnected:%b", mSocket.bound, mSocket.connected))
 
         mInputStream  = mSocket.inputStream
 
@@ -241,9 +237,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
                 out.flush
             }catch (Throwable t)
             {
-                mMainHandler.post([
-                    Log.e(TAG, String.format("Failed to write to socket"))
-                 ])
+                Log.e(TAG, String.format("Failed to write to socket"))
             }finally
             {
                 if (out != null)
@@ -329,27 +323,6 @@ class ReplService extends Service {
         new Thread ([
             NodeJNI.start(2, #["nodejs", createCacheFile("http_and_sock_repl.js").absolutePath ]) // runs succesfully
         ]).start()
-	}
-
-	/**
-	 * Leverage reflection to call ZygoteInit#createFileDescriptor
-	 *
-	 * I don't exactly know why I coded this, but I have a feeling
-	 * it might come in handy later, when getting an android...FileDescriptor
-	 * for fds created from node.
-	 */
-	def createFileDescriptor(int fdi)
-	{
-        var cls = Class.forName('com.android.internal.os.ZygoteInit')
-        /*
-        for (m : cls.declaredMethods)
-        {
-            Log.d(TAG, m.toString)
-        }
-        */
-        var method = cls.getDeclaredMethod('createFileDescriptor', Integer.TYPE)
-        method.accessible = true
-        return method.invoke(null, #[ fdi ]) as FileDescriptor
 	}
 
 	override int onStartCommand(Intent intent, int flags, int startId) {

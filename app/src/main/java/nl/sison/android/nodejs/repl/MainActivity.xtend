@@ -18,6 +18,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 
+import android.system.Os
+import android.system.OsConstants
+
 // Since this is deprecated: import nl.sison.android.nodejs.services.*
 // bash command to generate it: grep sensors ./src/main/AndroidManifest.xml | sed 's/.*sensors.\(.*\)".*/import nl.sison.android.nodejs.sensors.\1/'
 
