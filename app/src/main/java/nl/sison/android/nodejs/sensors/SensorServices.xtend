@@ -171,13 +171,11 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 */
             // finally...
             // LocalSocketServer::new
-            /*
             mLocalServerSocket =
                 new LocalServerSocket(NodeJNI.createLocalSocket(location).createFileDescriptor)
 
             // The following will block, so no funky busy loops with sleep necessary
             mLocalSocketSender = mLocalServerSocket.accept
-            */
         }catch (IOException e)
         {
             Log.e(TAG, e.message)
