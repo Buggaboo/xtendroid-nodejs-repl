@@ -146,7 +146,7 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
 
     override onSensorChanged(SensorEvent event)
     {
-        if (mLocalSocketSender != null) // implies there is a connection with a client
+        if (mLocalSocketSender != null && mLocalSocketSender.connected) // implies there is a connection with a client
         {
             var out = mLocalSocketSender.outputStream
             out.write(jsonify(event))
@@ -159,19 +159,28 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         // intentionally not implemented
     }
 
+    /**
+    Activate with:
+        var net = require('net');
+        var conn = net.createConnection('/data/data/nl.sison.android.nodejs.repl/cache/sensor_sockets/TYPE_ALL.sock');
+        conn.on('connect', function() { console.log('connected to unix socket server');});
+        conn.on('data', function () { console.log(data) });
+
+    */
     static def jsonify(SensorEvent event)
     {
         val objSensor = new JSONObject
         val sensor = event.sensor
+
         objSensor.put('type', sensor.type)
         .put('name', sensor.name)
-        .put('stringType', sensor.stringType) // unsupported by my Samsung tablet for some reason
+        .put('stringType', try { sensor.stringType }catch (NoSuchMethodError e) { 'null' } ) // unsupported by my Samsung tablet for some reason
         .put('fifoMaxEventCount', sensor.fifoMaxEventCount)
         .put('fifoReservedEventCount', sensor.fifoReservedEventCount)
-        .put('maxDelay', sensor.maxDelay) // unsupported by my Samsung tablet for some reason
+        .put('maxDelay', try { sensor.maxDelay }catch (NoSuchMethodError e) { 'null' } ) // unsupported by my Samsung tablet for some reason
         .put('minDelay', sensor.minDelay)
         .put('power', sensor.power)
-        .put('reportingMode', sensor.reportingMode)
+        .put('reportingMode', try { sensor.reportingMode }catch (NoSuchMethodError e) { 'null' } )
         .put('maximumRange', sensor.maximumRange)
         .put('resolution', sensor.resolution)
         .put('vendor', sensor.vendor)
