@@ -50,10 +50,17 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
         return null // we will not bind this
     }
 
+    var int    SENSOR_TYPE
+    var String SENSOR_TYPE_NAME
+
+    new (int sensorType, String sensorTypeName)
+    {
+        SENSOR_TYPE = sensorType
+        SENSOR_TYPE_NAME = sensorTypeName
+    }
+
     protected Sensor mSensor
     protected SensorManager mSensorManager
-    protected var SENSOR_TYPE = Sensor.TYPE_ALL
-    protected var SENSOR_TYPE_NAME = 'ALL'
     protected val SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
     protected def void startSensor(int sensorType, String sensorTypeName)
     {
@@ -211,6 +218,8 @@ class NodeSensorBaseService extends Service implements SensorEventListener {
  * This was intended as a pre-scan of available Sensors */
 class SensorService extends NodeSensorBaseService
 {
+    new() { super(Sensor.TYPE_ALL, 'ALL') }
+
     var sepukuHandler = new Handler
     override void startSensor(int type, String name)
     {
@@ -224,85 +233,73 @@ class SensorService extends NodeSensorBaseService
 /** TYPE_ACCELEROMETER 	A constant describing an accelerometer sensor type. */
 class AccelerometerService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_ACCELEROMETER
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ACCELEROMETER
+    new () { super(Sensor.TYPE_ACCELEROMETER, Sensor.STRING_TYPE_ACCELEROMETER) }
 }
 
 /** TYPE_AMBIENT_TEMPERATURE 	A constant describing an ambient temperature sensor type. */
 class AmbientTemperatureService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_AMBIENT_TEMPERATURE
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_AMBIENT_TEMPERATURE
+    new () { super(Sensor.TYPE_AMBIENT_TEMPERATURE, Sensor.STRING_TYPE_AMBIENT_TEMPERATURE) }
 }
 
 /** TYPE_GAME_ROTATION_VECTOR 	A constant describing an uncalibrated rotation vector sensor type. */
 class GameRotationVectorService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_GAME_ROTATION_VECTOR
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GAME_ROTATION_VECTOR
+    new () { super(Sensor.TYPE_GAME_ROTATION_VECTOR, Sensor.STRING_TYPE_GAME_ROTATION_VECTOR) }
 }
 
 /** TYPE_GEOMAGNETIC_ROTATION_VECTOR 	A constant describing a geo-magnetic rotation vector. */
 class GeoMagneticRotationVectorService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GEOMAGNETIC_ROTATION_VECTOR
+    new () { super(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR, Sensor.STRING_TYPE_GEOMAGNETIC_ROTATION_VECTOR) }
 }
 
 /** TYPE_GRAVITY 	A constant describing a gravity sensor type. */
 class GravityService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_GRAVITY
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GRAVITY
+    new () { super(Sensor.TYPE_GRAVITY, Sensor.STRING_TYPE_GRAVITY) }
 }
 
 /** TYPE_GYROSCOPE 	A constant describing a gyroscope sensor type. */
 class GyroscopeService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_GYROSCOPE
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GYROSCOPE
+    new () { super(Sensor.TYPE_GYROSCOPE, Sensor.STRING_TYPE_GYROSCOPE) }
 }
 
 /** TYPE_GYROSCOPE_UNCALIBRATED 	A constant describing an uncalibrated gyroscope sensor type. */
 class GyroscopeUncalibratedService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_GYROSCOPE_UNCALIBRATED
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_GYROSCOPE_UNCALIBRATED
+    new () { super(Sensor.TYPE_GYROSCOPE_UNCALIBRATED, Sensor.STRING_TYPE_GYROSCOPE_UNCALIBRATED) }
 }
 
 /** TYPE_HEART_RATE 	A constant describing a heart rate monitor. */
 class HeartRateService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_HEART_RATE
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_HEART_RATE
+    new () { super(Sensor.TYPE_HEART_RATE, Sensor.STRING_TYPE_HEART_RATE) }
 }
 
 /** TYPE_LIGHT 	A constant describing a light sensor type. */
 class LightService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_LIGHT
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_LIGHT
+    new () { super(Sensor.TYPE_LIGHT, Sensor.STRING_TYPE_LIGHT) }
 }
 
 /** TYPE_LINEAR_ACCELERATION 	A constant describing a linear acceleration sensor type. */
 class LinearAccelerationService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_LINEAR_ACCELERATION
+    new () { super(Sensor.TYPE_LINEAR_ACCELERATION, Sensor.STRING_TYPE_LINEAR_ACCELERATION) }
 }
 
 /** TYPE_MAGNETIC_FIELD 	A constant describing a magnetic field sensor type. */
 class MagneticFieldService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_MAGNETIC_FIELD
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_MAGNETIC_FIELD
+    new () { super(Sensor.TYPE_MAGNETIC_FIELD, Sensor.STRING_TYPE_MAGNETIC_FIELD) }
 }
 
 /** TYPE_MAGNETIC_FIELD_UNCALIBRATED 	A constant describing an uncalibrated magnetic field sensor type. */
 class MagneticFieldUncalibratedService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_MAGNETIC_FIELD_UNCALIBRATED
+    new () { super(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED, Sensor.STRING_TYPE_MAGNETIC_FIELD_UNCALIBRATED) }
 }
 
 /** TYPE_ORIENTATION 	This constant was deprecated in API level 8. use SensorManager.getOrientation() instead. */
@@ -310,50 +307,43 @@ class MagneticFieldUncalibratedService extends NodeSensorBaseService
 /** TYPE_PRESSURE 	A constant describing a pressure sensor type. */
 class PressureService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_PRESSURE
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_PRESSURE
+    new () { super(Sensor.TYPE_PRESSURE, Sensor.STRING_TYPE_PRESSURE) }
 }
 
 /** TYPE_PROXIMITY 	A constant describing a proximity sensor type. */
 class ProximityService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_PROXIMITY
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_PROXIMITY
+    new () { super(Sensor.TYPE_PROXIMITY, Sensor.STRING_TYPE_PROXIMITY) }
 }
 
 /** TYPE_RELATIVE_HUMIDITY 	A constant describing a relative humidity sensor type. */
 class RelativeHumidityService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_RELATIVE_HUMIDITY
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_RELATIVE_HUMIDITY
+    new () { super(Sensor.TYPE_RELATIVE_HUMIDITY, Sensor.STRING_TYPE_RELATIVE_HUMIDITY) }
 }
 
 /** TYPE_ROTATION_VECTOR 	A constant describing a rotation vector sensor type. */
 class RotationVectorService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_ROTATION_VECTOR
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_ROTATION_VECTOR
+    new () { super(Sensor.TYPE_ROTATION_VECTOR, Sensor.STRING_TYPE_ROTATION_VECTOR) }
 }
 
 /** TYPE_SIGNIFICANT_MOTION 	A constant describing a significant motion trigger sensor. */
 class SignificantMotionService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_SIGNIFICANT_MOTION
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_SIGNIFICANT_MOTION
+    new () { super(Sensor.TYPE_SIGNIFICANT_MOTION, Sensor.STRING_TYPE_SIGNIFICANT_MOTION) }
 }
 
 /** TYPE_STEP_COUNTER 	A constant describing a step counter sensor. */
 class StepCounterService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_STEP_COUNTER
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_STEP_COUNTER
+    new () { super(Sensor.TYPE_STEP_COUNTER, Sensor.STRING_TYPE_STEP_COUNTER) }
 }
 
 /** TYPE_STEP_DETECTOR 	A constant describing a step detector sensor. */
 class StepDetectorService extends NodeSensorBaseService
 {
-    protected var SENSOR_TYPE = Sensor.TYPE_STEP_DETECTOR
-    protected var SENSOR_TYPE_NAME = Sensor.STRING_TYPE_STEP_DETECTOR
+    new () { super(Sensor.TYPE_STEP_DETECTOR, Sensor.STRING_TYPE_STEP_DETECTOR) }
 }
 
 /** TYPE_TEMPERATURE 	This constant was deprecated in API level 14. use Sensor.TYPE_AMBIENT_TEMPERATURE instead. */
