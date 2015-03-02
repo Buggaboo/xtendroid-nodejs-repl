@@ -86,10 +86,10 @@ if (fs.existsSync(socketPath))
 }
 
 var socket_server = net.createServer(function(socket) { //'connection' listener
-    console.log(util.format('server connected: %j', socket.address()));
+    console.log(util.format('server connected: %j', socket));
 
-    socket.on ('connect', function () {
-
+    socket.on ('connect', function (something) {
+        console.log(util.format('server connected: %j', something));
     });
 
     repl.start({
@@ -99,7 +99,7 @@ var socket_server = net.createServer(function(socket) { //'connection' listener
     }).on('exit', function() {
         console.log('repl shutdown');
         socket.end();
-    });
+    }, function (meh) { console.log(util.format('repl: %j', meh)); });
 
 /*
     // WTF would you want this?

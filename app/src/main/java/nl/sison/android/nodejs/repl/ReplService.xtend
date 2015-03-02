@@ -137,11 +137,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     }
 
     InputStream  mInputStream
-    BufferedInputStream mBis
-
-    val bufferSize = 512
-    val buffer = newByteArrayOfSize(bufferSize)
-    val mBaf = new ByteArrayBuffer(50);
+    OutputStream mOutputStream
 
     /**
      * Run on a seperate thread
@@ -186,11 +182,6 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
     def setupLocalSocketStreams()
     {
         Log.d(TAG, String.format("bound:%b\tconnected:%b", mSocket.bound, mSocket.connected))
-
-        mInputStream  = mSocket.inputStream
-
-        // urlConn.inputStream signals the outputStream is ready to be sent
-        mBis = new BufferedInputStream(mInputStream) // socket in (receive)
     }
 
     /**
@@ -222,34 +213,37 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
         return true
     }
 
+    val bufferSize = 512
+    val buffer = newByteArrayOfSize(bufferSize)
+    val mByteArrayBuffer = new ByteArrayBuffer(50);
     def processStatement(String statement) {
+        mInputStream  = mSocket.inputStream
+        mOutputStream = mSocket.outputStream
+
         if (!TextUtils.isEmpty(statement))
         {
-            var OutputStream out
             try {
-                out = mSocket.outputStream // TODO test if necessary to run this on the ui thread
-                out.write(TextUtils.concat(statement, '\n').toString.getBytes('UTF-8'))
-                out.flush
+                mOutputStream.write(TextUtils.concat(statement, '\n').toString.getBytes('UTF-8'))
+                mOutputStream.flush
             }catch (Throwable t)
             {
                 Log.e(TAG, String.format("Failed to write to socket"))
-            }finally
-            {
-                if (out != null)
-                {
-                    out.close
-                }
             }
+        }
+
+        if (mOutputStream != null)
+        {
+            mOutputStream.close
         }
 
         var read = -1
 
-        while ((read = mBis.read(buffer)) != -1)
+        while ((read = mInputStream.read(buffer)) != -1)
         {
-            mBaf.append(buffer, 0, read)
+            mByteArrayBuffer.append(buffer, 0, read)
         }
 
-        return new String(mBaf.toByteArray, 'UTF-8')
+        return new String(mByteArrayBuffer.toByteArray, 'UTF-8')
     }
 
     /**
@@ -263,7 +257,7 @@ final class ReplWorker extends HandlerThread implements Handler$Callback
         {
             mSocket.close
             mInputStream.close
-            mBis.close
+            mOutputStream.close
         }
     }
 
@@ -335,42 +329,25 @@ class ReplService extends Service {
      */
     def File createCacheFile(String filename)
     {
-         val cacheFile = new File(cacheDir, filename)
+        val cacheFile = new File(cacheDir, filename)
 
-         var InputStream inputStream = null
-         var FileOutputStream fileOutputStream = null
+        var InputStream inputStream = null
+        var FileOutputStream fileOutputStream = null
 
-         try {
+        inputStream = assets.open("js/" + filename)
+        fileOutputStream = new FileOutputStream(cacheFile)
 
-          inputStream = assets.open("js/" + filename)
-          fileOutputStream = new FileOutputStream(cacheFile)
+        val bufferSize = 1024
+        var buffer = newByteArrayOfSize(bufferSize)
+        var length = -1
 
-          val bufferSize = 1024
-          var buffer = newByteArrayOfSize(bufferSize)
-          var length = -1
+        while ( (length = inputStream.read(buffer)) > 0) {
+          fileOutputStream.write(buffer,0,length)
+        }
 
-          while ( (length = inputStream.read(buffer)) > 0) {
-              fileOutputStream.write(buffer,0,length)
-          }
+        fileOutputStream.close
 
-         } catch (FileNotFoundException e) {
-          e.printStackTrace()
-         } catch (IOException e) {
-          e.printStackTrace()
-         }finally {
-          try {
-              fileOutputStream.close()
-          } catch (IOException e) {
-              e.printStackTrace()
-          }
-          try {
-              inputStream.close()
-          } catch (IOException e) {
-              e.printStackTrace()
-          }
-         }
-
-         return cacheFile
+        return cacheFile
     }
 
     /**

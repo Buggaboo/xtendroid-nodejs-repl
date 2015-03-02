@@ -118,7 +118,7 @@ import static extension gr.uoa.di.android.helpers.Net.*
         val context = applicationContext as Context
         // The following statement should be:
         // val prefs = context.defaultSharedPreferences
-        // but try arguing with a pre-alpha Xtend IDE plugins...
+        // but try arguing with a pre-alpha Xtend IDE plugin...
         // TODO complain, then wait for the fix :P
         // The weird thing is that SensorServicePreferenceActivity, does it properly
         val SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context)
