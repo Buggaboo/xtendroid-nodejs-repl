@@ -1,4 +1,20 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+        // Enable this if you use SNAPSHOT
+        //maven {
+        //    url uri('https://oss.sonatype.org/content/repositories/snapshots/')
+        //}
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.0.0'
+        classpath 'com.github.ksoichiro:gradle-eclipse-aar-plugin:0.1.3'
+    }
+}
+
 apply plugin: 'com.android.application'
+apply plugin: 'com.github.ksoichiro.eclipse.aar'
 apply plugin: 'org.xtend.xtend-android'
 
 android {
@@ -27,6 +43,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+// Configure eclipse-aar plugin
+eclipseAar {
+    // See "Configurations" for details
+    androidTarget = 'android-21'
+    aarDependenciesDir = 'aarDependencies'
 }
 
 dependencies {
