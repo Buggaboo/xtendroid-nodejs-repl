@@ -35,6 +35,8 @@ class MyActionBarDrawerToggle extends ActionBarDrawerToggle
     override onDrawerOpened(View view)
     {
         super.onDrawerOpened(view)
-        mContext.settings.drawerLearned = true
+        val s = mContext.settings
+        s.drawerLearned = true
+        //mContext.settings.drawerLearned = true
     }
 }

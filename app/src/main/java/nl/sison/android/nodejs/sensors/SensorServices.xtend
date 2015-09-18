@@ -33,15 +33,17 @@ import nl.sison.android.nodejs.repl.NodeJNI
 
 
 // Gradle bug, after project clean, MIA, specific for android
-import nl.sison.android.nodejs.BuildConfig
+//import nl.sison.android.nodejs.BuildConfig
 
 import org.xtendroid.annotations.AddLogTag
 
 import java.lang.reflect.Method
 
 
-@AddLogTag
+//@AddLogTag
 class NodeSensorBaseService extends Service implements SensorEventListener {
+
+    protected val TAG = " NodeSensorBaseService"
 
     Handler mainHandler = new Handler(Looper.getMainLooper())
 
